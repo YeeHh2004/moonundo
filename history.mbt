@@ -2,6 +2,7 @@
 priv struct Revision[T] {
   value : T
   label : String
+  group : String
   id : Int
 }
 
@@ -13,6 +14,7 @@ pub struct History[T] {
   priv mut revisions : Array[Revision[T]]
   priv mut cursor : Int
   priv mut live : T
+  priv mut merge_allowed : Bool
   priv mut saved_id : Int?
   priv mut next_id : Int
   priv mut limit : Int
@@ -33,10 +35,11 @@ pub fn[T] History::new(
   Ok({
     copy,
     same: equal,
-    revisions: [{ value: copy(initial), label: "Initial", id: 0, }],
+    revisions: [{ value: copy(initial), label: "Initial", group: "", id: 0, }],
     cursor: 0,
     live: copy(initial),
     transactions: [],
+    merge_allowed: false,
     saved_id: Some(0),
     next_id: 1,
     limit,
@@ -65,6 +68,7 @@ pub fn[T] History::record(
   self : History[T],
   next : T,
   label : String,
+  group? : String = "",
 ) -> Result[Bool, String] {
   if (self.same)(self.live, next) {
     return Ok(false)
@@ -76,15 +80,23 @@ pub fn[T] History::record(
   if self.next_id == 2147483647 {
     return Err("revision identifier space exhausted")
   }
+  let merge = group != "" &&
+    self.merge_allowed &&
+    self.cursor > 0 &&
+    self.cursor + 1 == self.revisions.length() &&
+    self.revisions[self.cursor].group == group &&
+    self.saved_id != Some(self.revision_id())
+  let end = if merge { self.cursor } else { self.cursor + 1 }
   let kept : Array[Revision[T]] = []
-  for i in 0..<=self.cursor {
+  for i in 0..<end {
     kept.push(self.revisions[i])
   }
-  kept.push({ value: (self.copy)(next), label, id: self.next_id, })
+  kept.push({ value: (self.copy)(next), label, group, id: self.next_id, })
   self.next_id += 1
   self.revisions = kept
   self.cursor = kept.length() - 1
   self.live = (self.copy)(next)
+  self.merge_allowed = group != ""
   self.trim()
   Ok(true)
 }
@@ -105,6 +117,7 @@ pub fn[T] History::undo(self : History[T]) -> Result[Bool, String] {
   if !self.transactions.is_empty() {
     return Err("cannot navigate during a transaction")
   }
+  self.merge_allowed = false
   if !self.can_undo() {
     return Ok(false)
   }
@@ -118,6 +131,7 @@ pub fn[T] History::redo(self : History[T]) -> Result[Bool, String] {
   if !self.transactions.is_empty() {
     return Err("cannot navigate during a transaction")
   }
+  self.merge_allowed = false
   if !self.can_redo() {
     return Ok(false)
   }

@@ -18,6 +18,7 @@ pub fn[T] History::begin(
   if self.transactions.length() >= 64 {
     return Err("transaction nesting limit is 64")
   }
+  self.merge_allowed = false
   self.transactions.push({ before: (self.copy)(self.live), label, })
   Ok(())
 }

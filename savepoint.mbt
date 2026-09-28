@@ -16,6 +16,7 @@ pub fn[T] History::mark_saved(self : History[T]) -> Result[Unit, String] {
   if !self.transactions.is_empty() {
     return Err("cannot mark a preview as saved; commit or rollback first")
   }
+  self.merge_allowed = false
   self.saved_id = Some(self.revision_id())
   Ok(())
 }
@@ -41,7 +42,8 @@ pub fn[T] History::reset(
   }
   let id = self.next_id
   self.next_id += 1
-  self.revisions = [{ value: (self.copy)(initial), label, id, }]
+  self.revisions = [{ value: (self.copy)(initial), label, group: "", id, }]
+  self.merge_allowed = false
   self.cursor = 0
   self.live = (self.copy)(initial)
   self.saved_id = Some(id)

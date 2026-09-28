@@ -53,6 +53,7 @@ pub fn[T] History::jump_to(
   if index < 0 || index >= self.revisions.length() {
     return Err("timeline index out of range")
   }
+  self.merge_allowed = false
   if index == self.cursor {
     return Ok(false)
   }
@@ -73,6 +74,7 @@ pub fn[T] History::set_capacity(
   if limit < 1 || limit > 10000 {
     return Err("history limit must be between 1 and 10000")
   }
+  self.merge_allowed = false
   self.limit = limit
   self.trim()
   Ok(())
@@ -84,6 +86,7 @@ pub fn[T] History::clear(self : History[T]) -> Result[Unit, String] {
   if !self.transactions.is_empty() {
     return Err("cannot clear during a transaction")
   }
+  self.merge_allowed = false
   self.revisions = [self.revisions[self.cursor]]
   self.cursor = 0
   Ok(())
