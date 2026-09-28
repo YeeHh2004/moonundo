@@ -129,8 +129,14 @@ pub fn replay(text : String) -> String {
       "dirty": h.is_dirty(),
       "can_undo": h.can_undo(),
       "can_redo": h.can_redo(),
-      "undo_label": h.undo_label(),
-      "redo_label": h.redo_label(),
+      "undo_label": match h.undo_label() {
+        Some(label) => label.to_json()
+        None => Json::null()
+      },
+      "redo_label": match h.redo_label() {
+        Some(label) => label.to_json()
+        None => Json::null()
+      },
       "undo_depth": h.undo_depth(),
       "redo_depth": h.redo_depth(),
       "transaction_depth": h.transaction_depth(),

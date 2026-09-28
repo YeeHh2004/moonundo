@@ -42,7 +42,7 @@ workspace/
   moon.work       // members = ["moonundo", "my-app"]
   moonundo/       // 本仓库
   my-app/
-    moon.mod      // import { "YeeHh2004/moonundo@0.1.0" }
+    moon.mod      // import { "YeeHh2004/moonundo@0.1.1" }
     moon.pkg      // import { "YeeHh2004/moonundo" @undo }
 ```
 

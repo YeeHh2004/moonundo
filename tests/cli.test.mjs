@@ -13,12 +13,17 @@ test('CLI replays fixture and preserves clean transaction boundary', () => {
   assert.equal(result.state.items.length, 2);
   assert.equal(result.undo_depth, 1);
   assert.equal(result.dirty, false);
+  assert.equal(result.undo_label, 'Add two tasks');
+  assert.equal(result.redo_label, null);
 });
 test('CLI accepts stdin and round-trips exported session', () => {
   const first = JSON.parse(cli([], JSON.stringify({initial: 0, commands: [{op:'record',value:5}]})).stdout);
   const second = cli(['-'], JSON.stringify({session:first.session, commands:[{op:'undo'}]}));
   assert.equal(second.status, 0, second.stderr);
-  assert.equal(JSON.parse(second.stdout).state, 0);
+  const result = JSON.parse(second.stdout);
+  assert.equal(result.state, 0);
+  assert.equal(result.undo_label, null);
+  assert.equal(result.redo_label, 'Edit');
 });
 test('CLI distinguishes script rejection, usage and I/O failures', () => {
   assert.equal(cli([], '{bad').status, 1);
