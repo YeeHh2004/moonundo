@@ -1,9 +1,10 @@
 import {
   "YeeHh2004/moonundo" @undo,
+  "YeeHh2004/moonundo/examples/reducers",
 }
 
 pkgtype(kind: "executable")
 
 options(
-  link: { "js": { "exports": [ "replay" ], "format": "esm" } },
+  link: { "js": { "exports": [ "replay", "reduce" ], "format": "esm" } },
 )

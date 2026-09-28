@@ -1,10 +1,8 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "YeeHh2004/moonundo/bridge"
+package "YeeHh2004/moonundo/examples/reducers"
 
 // Values
 pub fn reduce(String) -> String
-
-pub fn replay(String) -> String
 
 // Errors
 

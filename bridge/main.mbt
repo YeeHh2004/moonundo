@@ -7,3 +7,8 @@ pub fn replay(text : String) -> String {
 fn main {
   ()
 }
+
+///|
+pub fn reduce(text : String) -> String {
+  @reducers.reduce(text)
+}
