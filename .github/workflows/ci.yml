@@ -1,0 +1,56 @@
+name: Test MoonUndo
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test:
+    name: ${{ matrix.os }} / Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            node: '20'
+          - os: ubuntu-latest
+            node: '22'
+          - os: windows-latest
+            node: '22'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: hustcer/setup-moonbit@9199da0ab63ea0c0bab1dc15f03d76e17ed4f75f # v1.22
+        with:
+          version: '0.10.14+7d59c7ec9'
+          core-version: '0.10.14+7d59c7ec9'
+      - run: moon version --all
+      - run: moon fmt --check
+      - run: moon check --target js
+      - run: moon info
+      - run: git diff --exit-code -- '*.mbti'
+      - run: moon test --target js
+      - run: moon test --target wasm-gc
+      - run: node scripts/build.mjs
+      - run: node --test tests/*.test.mjs
+      - name: Install pinned browser test runner
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        run: npm install --no-save --package-lock=false playwright@1.62.1
+      - name: Install Chromium
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        run: npx playwright install --with-deps chromium
+      - name: Browser acceptance
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        run: node tests/browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        with:
+          name: moonundo-web
+          path: web/
+      - uses: actions/upload-artifact@v4
+        if: always() && matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        with:
+          name: browser-screenshots
+          path: docs/screenshots/
