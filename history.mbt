@@ -14,7 +14,7 @@ pub struct History[T] {
   priv mut cursor : Int
   priv mut live : T
   priv mut next_id : Int
-  priv limit : Int
+  priv mut limit : Int
 }
 
 ///|

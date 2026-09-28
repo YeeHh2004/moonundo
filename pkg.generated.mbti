@@ -11,13 +11,29 @@ pub struct History[T] {
 }
 pub fn[T] History::can_redo(Self[T]) -> Bool
 pub fn[T] History::can_undo(Self[T]) -> Bool
+pub fn[T] History::capacity(Self[T]) -> Int
+pub fn[T] History::clear(Self[T]) -> Result[Unit, String]
+pub fn[T] History::jump_to(Self[T], Int) -> Result[Bool, String]
 pub fn[T] History::new(T, copy~ : (T) -> T, equal~ : (T, T) -> Bool, limit? : Int) -> Result[Self[T], String]
 pub fn[T] History::record(Self[T], T, String) -> Result[Bool, String]
 pub fn[T] History::redo(Self[T]) -> Result[Bool, String]
+pub fn[T] History::redo_depth(Self[T]) -> Int
+pub fn[T] History::redo_label(Self[T]) -> String?
 pub fn[T] History::revision_id(Self[T]) -> Int
+pub fn[T] History::set_capacity(Self[T], Int) -> Result[Unit, String]
 pub fn[T] History::state(Self[T]) -> T
+pub fn[T] History::timeline(Self[T]) -> Array[RevisionInfo]
 pub fn[T] History::undo(Self[T]) -> Result[Bool, String]
+pub fn[T] History::undo_depth(Self[T]) -> Int
 pub fn[T] History::undo_label(Self[T]) -> String?
+
+pub struct RevisionInfo {
+  index : Int
+  revision_id : Int
+  label : String
+  current : Bool
+} derive(ToJson)
+pub fn RevisionInfo::to_json(Self) -> Json
 
 // Type aliases
 
