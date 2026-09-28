@@ -1,0 +1,13 @@
+{
+  "initial": {"items": [], "next_id": 1},
+  "limit": 20,
+  "commands": [
+    {"op": "begin", "label": "Add two tasks"},
+    {"op": "record", "value": {"items": [{"id": 1, "title": "Review proposal", "done": false}], "next_id": 2}},
+    {"op": "record", "value": {"items": [{"id": 1, "title": "Review proposal", "done": false}, {"id": 2, "title": "Run acceptance checks", "done": false}], "next_id": 3}},
+    {"op": "commit"},
+    {"op": "save"},
+    {"op": "undo"},
+    {"op": "redo"}
+  ]
+}
