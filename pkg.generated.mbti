@@ -15,14 +15,19 @@ pub fn[T] History::can_undo(Self[T]) -> Bool
 pub fn[T] History::capacity(Self[T]) -> Int
 pub fn[T] History::clear(Self[T]) -> Result[Unit, String]
 pub fn[T] History::commit(Self[T]) -> Result[Bool, String]
+pub fn[T] History::forget_saved(Self[T]) -> Unit
+pub fn[T] History::is_dirty(Self[T]) -> Bool
 pub fn[T] History::jump_to(Self[T], Int) -> Result[Bool, String]
+pub fn[T] History::mark_saved(Self[T]) -> Result[Unit, String]
 pub fn[T] History::new(T, copy~ : (T) -> T, equal~ : (T, T) -> Bool, limit? : Int) -> Result[Self[T], String]
 pub fn[T] History::record(Self[T], T, String) -> Result[Bool, String]
 pub fn[T] History::redo(Self[T]) -> Result[Bool, String]
 pub fn[T] History::redo_depth(Self[T]) -> Int
 pub fn[T] History::redo_label(Self[T]) -> String?
+pub fn[T] History::reset(Self[T], T, label? : String) -> Result[Unit, String]
 pub fn[T] History::revision_id(Self[T]) -> Int
 pub fn[T] History::rollback(Self[T]) -> Result[Bool, String]
+pub fn[T] History::saved_revision_id(Self[T]) -> Int?
 pub fn[T] History::set_capacity(Self[T], Int) -> Result[Unit, String]
 pub fn[T] History::state(Self[T]) -> T
 pub fn[T] History::timeline(Self[T]) -> Array[RevisionInfo]

@@ -13,6 +13,7 @@ pub struct History[T] {
   priv mut revisions : Array[Revision[T]]
   priv mut cursor : Int
   priv mut live : T
+  priv mut saved_id : Int?
   priv mut next_id : Int
   priv mut limit : Int
   priv transactions : Array[Transaction[T]]
@@ -36,6 +37,7 @@ pub fn[T] History::new(
     cursor: 0,
     live: copy(initial),
     transactions: [],
+    saved_id: Some(0),
     next_id: 1,
     limit,
   })
