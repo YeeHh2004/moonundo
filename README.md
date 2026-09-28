@@ -6,6 +6,8 @@
 
 MoonUndo 是一个以 MoonBit 编写的独立 `History[T]` 库。应用保留自己的数据类型，只需提供复制和相等比较函数。它不要求采用某个 UI 框架、编辑器或 CRDT 文档模型。适合设置表单、任务工具、图形编辑器，以及其他有可编辑状态的单用户应用。
 
+**[在线体验三个应用](https://yeehh2004.github.io/moonundo/)** · [验收步骤](docs/ACCEPTANCE.md) · [公开接口](pkg.generated.mbti)。在线演示只在 CI 全部通过后部署。
+
 Generic, framework-independent snapshot history for MoonBit application state. Original implementation, Apache-2.0; AI-assisted development is disclosed. Not a port of an existing undo library.
 
 ![设置表单示例](docs/screenshots/settings.png)
