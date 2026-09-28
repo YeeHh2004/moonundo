@@ -35,6 +35,7 @@ jobs:
       - run: moon test --target wasm-gc
       - run: node scripts/build.mjs
       - run: node --test tests/*.test.mjs
+      - run: node scripts/check-consumer.mjs
       - name: Install pinned browser test runner
         if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
         run: npm install --no-save --package-lock=false playwright@1.62.1
