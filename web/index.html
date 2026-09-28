@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MoonUndo · 每一步，都能回头</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><a class="brand" href="#">◔ <strong>MoonUndo</strong></a><span class="badge">MoonBit 开源历史状态库</span><a href="https://github.com/YeeHh2004/moonundo" target="_blank" rel="noreferrer">源代码 ↗</a></header>
+<main>
+  <div class="hero"><div><p class="eyebrow">MAKE ROOM FOR EXPERIMENTS</p><h1>每一步，都能回头。</h1><p>一套通用历史库，让表单、任务和画布拥有可靠的撤销体验。</p></div><div class="hero-note"><strong>3 个应用 · 1 套引擎</strong><span>事务 / 保存点 / 连续编辑合并</span></div></div>
+  <nav aria-label="应用示例"><button data-tab="settings" class="active">01 <span>设置表单</span></button><button data-tab="tasks">02 <span>任务清单</span></button><button data-tab="canvas">03 <span>轻量画布</span></button></nav>
+  <div class="workspace">
+    <section class="app-card" aria-label="交互演示">
+      <div class="toolbar"><div><button id="undo" title="Ctrl/Cmd+Z">↶ 撤销</button><button id="redo" title="Ctrl/Cmd+Shift+Z">↷ 重做</button></div><span id="dirty" class="status"></span></div>
+      <section id="settings-panel" class="panel"><p class="kicker">SETTINGS / ATOMIC CHANGES</p><h2>把一次尝试，作为一个整体。</h2><p class="description">直接编辑可逐步撤销；开始批量修改后，多项变更一次提交，也能全部取消。</p>
+        <label class="field">工作区名称<input id="name" maxlength="80" autocomplete="off"></label>
+        <label class="field">界面主题<select id="theme"><option value="light">明亮 · Light</option><option value="dark">深色 · Dark</option></select></label>
+        <label class="toggle"><input type="checkbox" id="notifications"><span>接收任务提醒<small>只修改示例设置，不发送任何通知。</small></span></label>
+        <div id="settings-preview" class="preview"><span>◔</span><div><strong id="preview-name"></strong><small id="preview-description"></small></div></div>
+        <div class="actions"><button id="begin" class="primary">开始批量修改</button><button id="commit" class="primary" hidden>提交这组修改</button><button id="rollback" hidden>取消全部修改</button></div>
+      </section>
+      <section id="tasks-panel" class="panel" hidden><p class="kicker">TASKS / RECOVERABLE ACTIONS</p><h2>整理清单，不怕误删。</h2><p class="description">添加、完成、删除都能回退。批量完成后，一次撤销恢复整张清单。</p>
+        <form id="task-form"><input id="task-title" aria-label="新任务" maxlength="120" placeholder="下一件想完成的事…" required><button class="primary">添加任务</button></form>
+        <ul id="task-list"></ul><div class="actions"><button id="complete-all">全部完成</button><button id="remove-completed">清理已完成</button></div>
+      </section>
+      <section id="canvas-panel" class="panel" hidden><p class="kicker">CANVAS / GROUPED EDITS</p><h2>一次拖动，一步撤销。</h2><p class="description">拖动图形试试。连续的位置更新会合并成一步；也可选中图形后使用方向键。</p>
+        <div class="canvas-actions"><button id="add-shape">＋ 添加图形</button><button id="color-shape">切换颜色</button><button id="remove-shape">删除选中</button></div>
+        <div id="stage" tabindex="0" role="application" aria-label="图形画布，可拖动图形或使用方向键"><div id="shapes"></div></div><small class="canvas-tip">选中图形后：方向键移动 · Delete 删除 · 撤销恢复</small>
+      </section>
+      <div class="persistence"><button id="save">保存到本机</button><button id="restore">恢复本机存档</button><button id="export">导出历史</button><label class="file-button">导入历史<input type="file" id="import" accept="application/json,.json"></label></div>
+      <p id="message" role="status" aria-live="polite">正在加载 MoonBit 引擎…</p>
+    </section>
+    <aside class="history-card"><div class="history-heading"><h2>时间线</h2><span id="revision-count"></span></div><p class="description">点击任一步回到那个状态。回退后继续编辑，将产生新的历史分支。</p><ol id="timeline"></ol><div class="history-foot"><span>历史容量</span><select id="capacity" aria-label="历史容量"><option value="20">20 步</option><option value="50" selected>50 步</option><option value="100">100 步</option></select></div><dl><div><dt>撤销 / 重做</dt><dd id="depths"></dd></div><div><dt>事务层数</dt><dd id="transaction"></dd></div></dl></aside>
+  </div>
+  <footer><span>核心历史、事务与示例业务逻辑均由 MoonBit 编译执行。</span><span>数据保存在当前浏览器，可导出迁移；无服务器上传。</span></footer>
+</main><script type="module" src="app.mjs"></script>
+</body></html>
