@@ -2,6 +2,7 @@
 package "YeeHh2004/moonundo"
 
 // Values
+pub fn[T] restore_session(Json, (Json) -> Result[T, String], copy~ : (T) -> T, equal~ : (T, T) -> Bool) -> Result[History[T], String]
 
 // Errors
 
@@ -16,6 +17,7 @@ pub fn[T] History::can_undo(Self[T]) -> Bool
 pub fn[T] History::capacity(Self[T]) -> Int
 pub fn[T] History::clear(Self[T]) -> Result[Unit, String]
 pub fn[T] History::commit(Self[T]) -> Result[Bool, String]
+pub fn[T] History::export_session(Self[T], (T) -> Json) -> Result[Json, String]
 pub fn[T] History::forget_saved(Self[T]) -> Unit
 pub fn[T] History::is_dirty(Self[T]) -> Bool
 pub fn[T] History::jump_to(Self[T], Int) -> Result[Bool, String]

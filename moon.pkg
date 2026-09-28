@@ -1,1 +1,3 @@
-// Core uses only the MoonBit prelude.
+import {
+  "moonbitlang/core/json",
+}
