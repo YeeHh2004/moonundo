@@ -47,6 +47,9 @@ pub fn[T] History::jump_to(
   self : History[T],
   index : Int,
 ) -> Result[Bool, String] {
+  if !self.transactions.is_empty() {
+    return Err("cannot navigate during a transaction")
+  }
   if index < 0 || index >= self.revisions.length() {
     return Err("timeline index out of range")
   }
@@ -64,6 +67,9 @@ pub fn[T] History::set_capacity(
   self : History[T],
   limit : Int,
 ) -> Result[Unit, String] {
+  if !self.transactions.is_empty() {
+    return Err("cannot resize during a transaction")
+  }
   if limit < 1 || limit > 10000 {
     return Err("history limit must be between 1 and 10000")
   }
@@ -75,6 +81,9 @@ pub fn[T] History::set_capacity(
 ///|
 /// Forget navigation history while retaining current state and revision id.
 pub fn[T] History::clear(self : History[T]) -> Result[Unit, String] {
+  if !self.transactions.is_empty() {
+    return Err("cannot clear during a transaction")
+  }
   self.revisions = [self.revisions[self.cursor]]
   self.cursor = 0
   Ok(())

@@ -15,6 +15,7 @@ pub struct History[T] {
   priv mut live : T
   priv mut next_id : Int
   priv mut limit : Int
+  priv transactions : Array[Transaction[T]]
 }
 
 ///|
@@ -34,6 +35,7 @@ pub fn[T] History::new(
     revisions: [{ value: copy(initial), label: "Initial", id: 0, }],
     cursor: 0,
     live: copy(initial),
+    transactions: [],
     next_id: 1,
     limit,
   })
@@ -47,12 +49,12 @@ pub fn[T] History::state(self : History[T]) -> T {
 
 ///|
 pub fn[T] History::can_undo(self : History[T]) -> Bool {
-  self.cursor > 0
+  self.transactions.is_empty() && self.cursor > 0
 }
 
 ///|
 pub fn[T] History::can_redo(self : History[T]) -> Bool {
-  self.cursor + 1 < self.revisions.length()
+  self.transactions.is_empty() && self.cursor + 1 < self.revisions.length()
 }
 
 ///|
@@ -64,6 +66,10 @@ pub fn[T] History::record(
 ) -> Result[Bool, String] {
   if (self.same)(self.live, next) {
     return Ok(false)
+  }
+  if !self.transactions.is_empty() {
+    self.live = (self.copy)(next)
+    return Ok(true)
   }
   if self.next_id == 2147483647 {
     return Err("revision identifier space exhausted")
@@ -94,6 +100,9 @@ fn[T] History::trim(self : History[T]) -> Unit {
 
 ///|
 pub fn[T] History::undo(self : History[T]) -> Result[Bool, String] {
+  if !self.transactions.is_empty() {
+    return Err("cannot navigate during a transaction")
+  }
   if !self.can_undo() {
     return Ok(false)
   }
@@ -104,6 +113,9 @@ pub fn[T] History::undo(self : History[T]) -> Result[Bool, String] {
 
 ///|
 pub fn[T] History::redo(self : History[T]) -> Result[Bool, String] {
+  if !self.transactions.is_empty() {
+    return Err("cannot navigate during a transaction")
+  }
   if !self.can_redo() {
     return Ok(false)
   }
