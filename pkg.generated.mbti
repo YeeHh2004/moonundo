@@ -2,6 +2,8 @@
 package "YeeHh2004/moonundo"
 
 // Values
+pub fn replay(String) -> String
+
 pub fn[T] restore_session(Json, (Json) -> Result[T, String], copy~ : (T) -> T, equal~ : (T, T) -> Bool) -> Result[History[T], String]
 
 // Errors

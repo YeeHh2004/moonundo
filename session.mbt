@@ -45,6 +45,26 @@ pub fn[T] restore_session(
   copy~ : (T) -> T,
   equal~ : (T, T) -> Bool,
 ) -> Result[History[T], String] {
+  guard value is Object(fields) else { return Err("session must be an object") }
+  for key in ["version", "limit", "cursor", "next_id"] {
+    guard fields.get(key) is Some(number) && exact_int(number) is Ok(_) else {
+      return Err("session metadata requires exact 32-bit integers")
+    }
+  }
+  if fields.get("saved_id") is Some(number) &&
+    number != Json::null() &&
+    exact_int(number) is Err(_) {
+    return Err("saved_id requires an exact integer or null")
+  }
+  if fields.get("revisions") is Some(Array(items)) {
+    for item in items {
+      guard item is Object(entry) &&
+        entry.get("id") is Some(id) &&
+        exact_int(id) is Ok(_) else {
+        return Err("revision id requires an exact integer")
+      }
+    }
+  }
   let session : Session = @json.from_json(value) catch {
     _ => return Err("invalid session field types")
   }
@@ -97,4 +117,17 @@ pub fn[T] restore_session(
     limit: session.limit,
     transactions: [],
   })
+}
+
+///|
+fn exact_int(value : Json) -> Result[Int, String] {
+  guard value is Number(n, ..) else { return Err("expected integer") }
+  if n.is_nan() || n < -2147483648.0 || n > 2147483647.0 {
+    return Err("integer out of range")
+  }
+  let i = n.to_int()
+  if i.to_double() != n {
+    return Err("fractional integer")
+  }
+  Ok(i)
 }
