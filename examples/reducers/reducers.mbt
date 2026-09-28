@@ -89,6 +89,13 @@ fn settings(state : Json, action : Json, name : String) -> Json raise {
 
 ///|
 fn tasks(state : Json, action : Json, name : String) -> Json raise {
+  ignore(integer(get(state, "next_id")))
+  guard get(state, "items") is Array(raw_items) else {
+    raise InputError("items must be an array")
+  }
+  for item in raw_items {
+    ignore(integer(get(item, "id")))
+  }
   let current : Tasks = @json.from_json(state)
   if current.items.length() > 100 ||
     current.next_id < 1 ||
@@ -150,6 +157,15 @@ fn tasks(state : Json, action : Json, name : String) -> Json raise {
 
 ///|
 fn canvas(state : Json, action : Json, name : String) -> Json raise {
+  ignore(integer(get(state, "next_id")))
+  guard get(state, "shapes") is Array(raw_shapes) else {
+    raise InputError("shapes must be an array")
+  }
+  for shape in raw_shapes {
+    for key in ["id", "x", "y"] {
+      ignore(integer(get(shape, key)))
+    }
+  }
   let current : Canvas = @json.from_json(state)
   if current.shapes.length() > 30 ||
     current.next_id < 1 ||

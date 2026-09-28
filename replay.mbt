@@ -87,6 +87,7 @@ pub fn replay(text : String) -> String {
       raise ReplayError("request exceeds 2 million UTF-16 units")
     }
     let request = @json.parse(text)
+    validate_json(request, 0)
     let h = match optional(request, "session", Json::null()) {
       Null => {
         let limit = require(exact_int(optional(request, "limit", 100)))
@@ -143,5 +144,29 @@ pub fn replay(text : String) -> String {
       let response : Json = { "ok": false, "error": error.to_string() }
       response.stringify()
     }
+  }
+}
+
+///|
+fn validate_json(value : Json, depth : Int) -> Unit raise ReplayError {
+  if depth > 64 {
+    raise ReplayError("JSON nesting exceeds 64")
+  }
+  match value {
+    Number(n, ..) =>
+      if n.is_nan() || n < -9007199254740991.0 || n > 9007199254740991.0 {
+        raise ReplayError(
+          "JSON bridge numbers must be finite and within the safe integer range",
+        )
+      }
+    Array(items) =>
+      for item in items {
+        validate_json(item, depth + 1)
+      }
+    Object(fields) =>
+      for _, item in fields {
+        validate_json(item, depth + 1)
+      }
+    _ => ()
   }
 }
