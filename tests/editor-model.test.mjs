@@ -1,0 +1,41 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {EditorModel} from '../web/editor-model.mjs';
+const initial={name:'Workspace',theme:'light',notifications:true};
+const envelope=(session,kind='settings')=>({format:'moonundo-demo',version:1,kind,session});
+
+test('failed storage leaves state, savepoint, redo and grouping untouched',()=>{
+  const m=new EditorModel({initial});
+  try{
+    m.apply({op:'record',value:{...initial,name:'A'},group:'typing'});
+    const before=structuredClone(m.result), epoch=m.epoch;
+    assert.throws(()=>m.save(()=>{throw new Error('quota exceeded');}),/quota/);
+    assert.deepEqual(m.result,before);assert.equal(m.epoch,epoch);
+    m.apply({op:'record',value:{...initial,name:'B'},group:'typing'});
+    assert.equal(m.result.undo_depth,1);
+    let stored;m.save(s=>{stored=s;});
+    const restored=EditorModel.fromEnvelope(envelope(stored),'settings');
+    try{assert.equal(restored.result.dirty,false);assert.equal(restored.result.state.name,'B');}finally{restored.close();}
+  }finally{m.close();}
+});
+test('all imported snapshots validate before replacing an editor, and failed imports release handles',()=>{
+  const m=new EditorModel({initial});
+  try{
+    m.apply({op:'record',value:{...initial,name:'valid current'}});
+    const invalid=structuredClone(m.result.session);invalid.revisions[0].value.theme='invalid';
+    for(let i=0;i<80;i++)assert.throws(()=>EditorModel.fromEnvelope(envelope(invalid),'settings'),/应用数据无效/);
+    const valid=EditorModel.fromEnvelope(envelope(m.result.session),'settings');
+    try{assert.equal(valid.result.state.name,'valid current');}finally{valid.close();}
+    assert.throws(()=>EditorModel.fromEnvelope(envelope(m.result.session),'tasks'),/当前示例/);
+    assert.equal(m.result.state.name,'valid current');
+  }finally{m.close();}
+});
+test('edits exceed old script-size and command limits without accumulating replay inputs',()=>{
+  const m=new EditorModel({initial:{text:'a'.repeat(5000)}});
+  try{
+    for(let i=0;i<2200;i++)m.apply({op:'record',value:{text:'a'.repeat(5000),i},group:'long edit'});
+    assert.equal(m.result.undo_depth,1);assert.equal(m.result.state.i,2199);
+    m.apply({op:'undo'});assert.deepEqual(m.result.state,{text:'a'.repeat(5000)});
+    assert.equal('commands' in m,false);
+  }finally{m.close();}
+});

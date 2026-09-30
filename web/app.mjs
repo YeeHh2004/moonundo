@@ -1,28 +1,18 @@
-import {replay, reduce} from './moonundo.mjs';
+import {reduce} from './moonundo.mjs';
+import {EditorModel} from './editor-model.mjs';
 const $ = id => document.getElementById(id);
 const presets = {
   settings: {name:'我的创作空间', theme:'light', notifications:true},
   tasks: {items:[{id:1,title:'尝试完成一项任务，再撤销',done:false},{id:2,title:'误删也能从时间线找回来',done:false}],next_id:3},
   canvas: {shapes:[{id:1,x:62,y:76,color:'violet'},{id:2,x:234,y:155,color:'mint'}],next_id:3}
 };
-const models = Object.fromEntries(Object.entries(presets).map(([kind,initial]) => [kind,{base:{initial,limit:50},commands:[],result:null}]));
+const models = Object.fromEntries(Object.entries(presets).map(([kind,initial]) => [kind,new EditorModel({initial,limit:50})]));
 let kind = 'settings', selected = 1, drag = null;
-function evaluate(model, commands = model.commands) {
-  const result = JSON.parse(replay(JSON.stringify({...model.base, commands})));
-  if (!result.ok) throw new Error(result.error);
-  return result;
-}
-for (const model of Object.values(models)) model.result = evaluate(model);
 function message(text, error = false) { $('message').textContent = text; $('message').classList.toggle('error',error); }
 function dispatch(command, notice) {
   const model = models[kind];
   try {
-    if (model.commands.length >= 1500 && !model.result.transaction_depth && model.result.session) {
-      model.base = {session:model.result.session}; model.commands = [];
-    }
-    const commands = [...model.commands, command];
-    const result = evaluate(model, commands);
-    model.commands = commands; model.result = result;
+    model.apply(command);
     render(); if (notice) message(notice);
     return true;
   } catch (error) { message(error.message,true); return false; }
@@ -53,7 +43,10 @@ function render() {
   $('depths').textContent = `${r.undo_depth} / ${r.redo_depth}`;
   $('transaction').textContent = r.transaction_depth;
   $('revision-count').textContent = `${r.timeline.length} 个状态`;
-  if (r.session) $('capacity').value = r.session.limit;
+  if (![...$('capacity').options].some(option => Number(option.value) === r.capacity)) {
+    const option = document.createElement('option'); option.value = r.capacity; option.textContent = `${r.capacity} 步`; $('capacity').append(option);
+  }
+  $('capacity').value = r.capacity;
   $('timeline').replaceChildren(...r.timeline.map((entry,i) => {
     const li = document.createElement('li');
     const b = button(entry.label === 'Initial' ? '初始状态' : entry.label, () => dispatch({op:'jump',index:i},'已切换到选中的历史状态。'),entry.current?'current':i>r.undo_depth?'future':'');
@@ -127,19 +120,14 @@ $('stage').onkeyup=()=>dispatch({op:'break_group'});
 $('capacity').onchange=()=>dispatch({op:'capacity',limit:Number($('capacity').value)},'容量已更新：保留当前状态和最近的历史。');
 function envelope(session){return {format:'moonundo-demo',version:1,kind,session};}
 function loadEnvelope(data){
-  if(data.format!=='moonundo-demo'||data.version!==1||data.kind!==kind)throw new Error('请选择当前示例的 MoonUndo 历史文件。');
-  const candidate={base:{session:data.session},commands:[]};candidate.result=evaluate(candidate);
-  for(const revision of data.session.revisions){
-    const checked=JSON.parse(reduce(JSON.stringify({kind,state:revision.value,action:{type:'validate'}})));
-    if(!checked.ok)throw new Error('历史中的应用数据无效：'+checked.error);
-  }
+  const candidate=EditorModel.fromEnvelope(data,kind);
+  models[kind].close();
   models[kind]=candidate;render();
 }
 $('save').onclick=()=>{
   try{
-    const m=models[kind],commands=[...m.commands,{op:'save'}],result=evaluate(m,commands);
-    localStorage.setItem('moonundo:'+kind,JSON.stringify(envelope(result.session)));
-    m.commands=commands;m.result=result;render();message('已保存到当前浏览器。关闭页面后，可用“恢复本机存档”找回。');
+    models[kind].save(session=>localStorage.setItem('moonundo:'+kind,JSON.stringify(envelope(session))));
+    render();message('已保存到当前浏览器。关闭页面后，可用“恢复本机存档”找回。');
   }catch(error){message('保存失败，未更新保存点：'+error.message,true);}
 };
 $('restore').onclick=()=>{try{const text=localStorage.getItem('moonundo:'+kind);if(!text)throw new Error('当前示例还没有本机存档。');loadEnvelope(JSON.parse(text));message('已恢复本机存档，撤销和重做仍然可用。');}catch(error){message(error.message,true);}};
@@ -147,7 +135,16 @@ $('export').onclick=()=>{
   const url=URL.createObjectURL(new Blob([JSON.stringify(envelope(models[kind].result.session),null,2)],{type:'application/json'}));
   const a=document.createElement('a');a.href=url;a.download=`moonundo-${kind}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);message('历史文件已交给浏览器下载；保存点未改变。');
 };
-$('import').onchange=async()=>{try{const file=$('import').files[0];if(!file)return;if(file.size>2000000)throw new Error('文件需小于 2 MB。');loadEnvelope(JSON.parse(await file.text()));message('历史已导入。');}catch(error){message('导入失败，原状态保留：'+error.message,true);}finally{$('import').value='';}};
+$('import').onchange=async()=>{
+  const originalKind=kind, model=models[kind], epoch=model.epoch;
+  try{
+    const file=$('import').files[0];if(!file)return;
+    if(file.size>2000000)throw new Error('文件需小于 2 MB。');
+    const data=JSON.parse(await file.text());
+    if(kind!==originalKind || models[kind]!==model || model.epoch!==epoch)throw new Error('读取文件期间发生了编辑或切换，请重新导入。');
+    loadEnvelope(data);message('历史已导入。');
+  }catch(error){message('导入失败，原状态保留：'+error.message,true);}finally{$('import').value='';}
+};
 document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){
     e.preventDefault();$(e.shiftKey?'redo':'undo').click();

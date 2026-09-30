@@ -47,6 +47,28 @@ try {
   await page.locator('#import').setInputFiles({name:'broken.json',mimeType:'application/json',buffer:Buffer.from('{bad')});
   await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('导入失败'));
   assert.equal(await page.locator('#name').inputValue(),'MoonUndo Studio');
+  // A localStorage failure must not turn unsaved changes into a clean revision.
+  await page.locator('#name').fill('Storage failure must stay dirty');
+  await page.evaluate(()=>{window.originalSetItem=Storage.prototype.setItem;Storage.prototype.setItem=()=>{throw new DOMException('Quota exceeded','QuotaExceededError');};});
+  await page.locator('#save').click();
+  assert.equal(await page.locator('#dirty').textContent(),'有未保存的修改');
+  assert.match(await page.locator('#message').textContent(),/保存失败/);
+  await page.evaluate(()=>{Storage.prototype.setItem=window.originalSetItem;});
+  await page.locator('#restore').click();
+  // Artificially defer reading a selected file, then edit before it completes.
+  const archive=await page.evaluate(()=>localStorage.getItem('moonundo:settings'));
+  await page.evaluate(text=>{window.originalFileText=File.prototype.text;File.prototype.text=function(){return new Promise(resolve=>{window.finishImport=()=>resolve(text);});};},archive);
+  await page.locator('#import').setInputFiles({name:'deferred.json',mimeType:'application/json',buffer:Buffer.from(archive)});
+  await page.waitForFunction(()=>typeof window.finishImport==='function');
+  await page.locator('#name').fill('Keep the newer edit');
+  await page.evaluate(()=>{window.finishImport();File.prototype.text=window.originalFileText;});
+  await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('读取文件期间'));
+  assert.equal(await page.locator('#name').inputValue(),'Keep the newer edit');
+  await page.locator('#restore').click();
+  await page.locator('#begin').click();
+  await page.evaluate(()=>{const input=document.querySelector('#name');for(let i=0;i<2200;i++){input.value='Long preview '+i;input.dispatchEvent(new Event('input',{bubbles:true}));}});
+  await page.locator('#rollback').click();
+  assert.equal(await page.locator('#name').inputValue(),'MoonUndo Studio');
   await page.locator('#save').click();
   await mkdir(new URL('../docs/screenshots/',import.meta.url),{recursive:true});
   await page.screenshot({path:new URL('../docs/screenshots/settings.png',import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/,''),fullPage:true});
