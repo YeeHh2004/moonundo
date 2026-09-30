@@ -1,6 +1,7 @@
 # MoonUndo
 
 [![Test MoonUndo](https://github.com/YeeHh2004/moonundo/actions/workflows/ci.yml/badge.svg)](https://github.com/YeeHh2004/moonundo/actions/workflows/ci.yml)
+[![Verify published Mooncake](https://github.com/YeeHh2004/moonundo/actions/workflows/registry.yml/badge.svg)](https://github.com/YeeHh2004/moonundo/actions/workflows/registry.yml)
 
 **给普通应用状态添加撤销、重做、批量取消和历史恢复。**
 
@@ -8,9 +9,11 @@ MoonUndo 是一个以 MoonBit 编写的独立 `History[T]` 库。应用保留自
 
 **[在线体验三个应用](https://yeehh2004.github.io/moonundo/)** · [验收步骤](docs/ACCEPTANCE.md) · [公开接口](pkg.generated.mbti)。在线演示只在 CI 全部通过后部署。
 
-**当前版本：v0.2.1。** [下载含预编译引擎的完整交付包](https://github.com/YeeHh2004/moonundo/releases/tag/v0.2.1)后，安装 Node.js 20+，直接执行 `node scripts/serve.mjs` 即可体验，无需先安装 MoonBit 或 npm 依赖。
+**当前版本：v0.2.2。** [下载含预编译引擎的完整交付包](https://github.com/YeeHh2004/moonundo/releases/tag/v0.2.2)后，安装 Node.js 20+，直接执行 `node scripts/serve.mjs` 即可体验，无需先安装 MoonBit 或 npm 依赖。
 
 仓库内可直接审阅：[独立 MoonBit 接入项目](examples/consumer/) · [真实数据性能与原始记录](docs/PERFORMANCE.md) · [功能完成度与验证证据](docs/FINAL-ACCEPTANCE.md) · [版本开发记录](CHANGELOG.md)。全部核心功能、示例、测试和说明均随源码公开。
+
+九项验收要求的对应实现与复现命令见 [逐项核对](docs/REVIEW-CHECKLIST.md)。核心历史、事务、存档、JSON 适配器及示例 reducer 均由 MoonBit 实现；JavaScript 承担 DOM、宿主文件读写及工程测试。Mooncakes 分发包只包含 MoonBit 实现、测试、可运行示例和文档许可，不需要 JavaScript 宿主才能使用核心库。
 
 Generic, framework-independent snapshot history for MoonBit application state. Original implementation, Apache-2.0; AI-assisted development is disclosed. Not a port of an existing undo library.
 
@@ -39,14 +42,22 @@ node scripts/serve.mjs
 
 ## 在 MoonBit 中使用
 
-核心包是 `YeeHh2004/moonundo`。当前以 GitHub 源码交付，**尚未发布 Mooncakes 包**。可通过 [MoonBit workspace 本地依赖](https://docs.moonbitlang.com/en/latest/toolchain/moon/module.html) 接入：
+核心包已发布至 [Mooncakes](https://mooncakes.io/docs/YeeHh2004/moonundo)。在已有 MoonBit 项目中运行：
+
+```sh
+moon add YeeHh2004/moonundo@0.2.2
+```
+
+然后在使用该库的 `moon.pkg` 中声明 `import { "YeeHh2004/moonundo" @undo }`。可运行最小例子见 [包使用说明](docs/MOONCAKES.md)。`node scripts/check-consumer.mjs --registry` 会在无 workspace 的新项目中从公开注册表安装、核对核心源码，并在 JS/Wasm GC 上运行完整接入测试。
+
+开发本库时也可使用 [workspace 本地依赖](https://docs.moonbitlang.com/en/latest/toolchain/moon/module.html)：
 
 ```text
 workspace/
   moon.work       // members = ["moonundo", "my-app"]
   moonundo/       // 本仓库
   my-app/
-    moon.mod      // import { "YeeHh2004/moonundo@0.2.1" }
+    moon.mod      // import { "YeeHh2004/moonundo@0.2.2" }
     moon.pkg      // import { "YeeHh2004/moonundo" @undo }
 ```
 
@@ -109,7 +120,7 @@ node --test tests/*.test.mjs
 node scripts/check-consumer.mjs
 ```
 
-可用 `node scripts/verify.mjs` 一次执行上述完整验证；加 `--browser` 运行浏览器验收（需先安装下述测试工具）。当前 56 项 MoonBit 测试；独立模块检查额外增加 3 项，所在 workspace 共 59 项。31 项 Node 测试包含 8 个种子、合计 4,000 次生成状态转换的独立模型对照，以及 CLI、坏存档、数值边界、长时间编辑、存储失败、句柄生命周期、按需导出、导出限制与发布文件校验。浏览器验收另行执行：
+可用 `node scripts/verify.mjs` 一次执行上述完整验证；加 `--browser` 运行浏览器验收（需先安装下述测试工具）。当前 60 项 MoonBit 测试；独立模块检查额外增加 3 项，所在 workspace 共 63 项。31 项 Node 测试包含 8 个种子、合计 4,000 次生成状态转换的独立模型对照，以及 CLI、坏存档、数值边界、长时间编辑、存储失败、句柄生命周期、按需导出、导出限制与发布文件校验。浏览器验收另行执行：
 
 ```sh
 npm install --no-save --package-lock=false playwright@1.62.1

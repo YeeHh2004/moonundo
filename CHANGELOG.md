@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2 — 2026-09-30
+
+- Publish `YeeHh2004/moonundo@0.2.2` to Mooncakes. The source distribution contains MoonBit implementation, tests and runnable examples with Apache-2.0 and complete upstream notices; browser/Node hosts stay in GitHub/Releases.
+- Add a registry-only consumer mode that installs with `moon add`, verifies the version and core sources against the checkout, builds, and runs three integration tests and the example on JS/Wasm GC. Add a Linux/Windows workflow after releases.
+- Add archive-content validation and a dedicated package README, explicit supported targets and updated public installation instructions.
+- Exercise revision exhaustion, invalid metadata, resource limits and less common adapter operations directly on both MoonBit backends. Now 60 library tests (63 including the workspace consumer), plus 31 Node tests. Core instrumentation reports 382/384 covered points; CI saves the raw report.
+- Map all nine review requirements to repository evidence. No API or session-format breaking changes.
+
 ## 0.2.1 — 2026-09-30
 
 - Add optional `include_session: false` to incremental editors and use it in the browser. Ordinary edits return current state and metadata without copying/serializing the entire archive. Default responses and v1 sessions remain compatible; explicit export/save preparation still return complete histories.

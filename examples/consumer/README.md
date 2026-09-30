@@ -8,6 +8,8 @@
 node scripts/check-consumer.mjs
 ```
 
+验证已经发布的 Mooncakes 包：`node scripts/check-consumer.mjs --registry`。此模式在无 workspace、无本地路径依赖的临时项目中执行 `moon add YeeHh2004/moonundo@0.2.2`，核对实际安装版本和核心源码，再构建、测试并运行两个后端。GitHub Release 发布后也由独立 CI 执行。
+
 需要项目固定的 MoonBit compiler/core。脚本把本目录复制到系统临时目录，建立引用主库的 workspace，在 JavaScript 和 Wasm GC 上执行三项完整流程测试并运行示例，完成后清理自己创建的临时目录。无需 Mooncakes 已发布包，也不会写入你的项目目录。
 
 阅读 [workflow.mbt](workflow.mbt) 看接入代码，[workflow_wbtest.mbt](workflow_wbtest.mbt) 看行为断言：

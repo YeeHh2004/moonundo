@@ -1,10 +1,10 @@
-# MoonUndo v0.2.1 最终验收说明
+# MoonUndo v0.2.2 最终验收说明
 
 日期：2026-09-30。方向保持为 **MoonBit 通用撤销/重做与事务历史库**。已通过初审的方向不变，本次工作加强长期编辑、失败处理、可复用接入和开源分发完整性。本文是仓库内的实现与证据索引，评审可直接通过源码、示例和 Actions 核验，无需依赖仓库外的材料。
 
 ## 初审后的实际增量
 
-| 0.1.1 中的问题或不足 | 0.2.1 的实现 | 验证证据 |
+| 0.1.1 中的问题或不足 | 0.2.2 的实现 | 验证证据 |
 | --- | --- | --- |
 | UI 每次从头回放操作，长事务可碰到脚本上限 | JsonEditor 持有真实 History 实例；ESM handle 支持创建、命令与释放 | editor_test、runtime.test、浏览器 2,200 次预览后取消 |
 | 日志压缩会切断连续编辑分组 | 不积累/压缩回放日志，分组只按明确边界结束 | 2,300 次编辑仍一次撤销；增量与回放结果逐步对照 |
@@ -30,7 +30,7 @@
 
 ## 验证规模与复现
 
-`node scripts/verify.mjs --browser` 统一执行：56 项 MoonBit 测试（分别跑 JS/Wasm GC）、31 项 Node 测试，以及独立消费模块检查（加 3 项，工作区共 59 项）和浏览器验收。Node 模型对照包含 8 个固定种子、4,000 次状态转换，并对每 20 步及 session 恢复结果核对状态、历史编号、深度和保存点。CI 在 Linux Node 20/22、Windows Node 22 执行；Linux Node 22 运行 Chromium、真实数据工作负载并生成交付包。
+`node scripts/verify.mjs --browser` 统一执行：60 项 MoonBit 测试（分别跑 JS/Wasm GC）、31 项 Node 测试，以及独立消费模块检查（加 3 项，工作区共 63 项）和浏览器验收。Node 模型对照包含 8 个固定种子、4,000 次状态转换，并对每 20 步及 session 恢复结果核对状态、历史编号、深度和保存点。CI 在 Linux Node 20/22、Windows Node 22 执行；Linux Node 22 运行 Chromium、真实数据工作负载并生成交付包。
 
 测试不是只检查页面能打开：会验证误删恢复、事务取消、连续拖动合并、本机存档往返、损坏文件拒绝、旧状态中的应用数据校验、长事务退出、存储失败保存点不变，以及导入竞态保护。
 
@@ -45,10 +45,10 @@ v0.2.1 增加 [五组真实数据测量](PERFORMANCE.md) 和 [原始数据](benc
 3. 任务清单添加、删除任务，再撤销；全部完成后一次撤销恢复整张清单。
 4. 画布连续拖动一个图形，松开后一次撤销；切换颜色、删除后分别恢复。
 5. 导出历史并导入；导入错误类型或损坏文件应报错且原状态保留。
-6. 下载[Release](https://github.com/YeeHh2004/moonundo/releases/tag/v0.2.1) 的完整 ZIP，仅用 Node 20+ 运行 `node scripts/serve.mjs` 或 CLI 示例；核对 MANIFEST 与公开构建信息。
+6. 下载[Release](https://github.com/YeeHh2004/moonundo/releases/tag/v0.2.2) 的完整 ZIP，仅用 Node 20+ 运行 `node scripts/serve.mjs` 或 CLI 示例；核对 MANIFEST 与公开构建信息。
 
 ## 开源、相关性与边界
 
 原创实现以 Apache-2.0 发布，AI 辅助开发已披露；没有移植近邻项目的源码。所用标准库上游 LICENSE/NOTICE 原文随发行物附带，来源和工具见 NOTICE.md。核心状态机、事务、codec 与三个示例 reducer 使用 MoonBit；JavaScript 负责浏览器和 CLI 宿主 I/O。不是仅套用 MoonBit 名称的网页演示。
 
-当前仍为单用户全量快照历史，容量限制步数而非字节；不做 CRDT 协同、不回滚外部副作用、不宣称大文档增量压缩。接入方负责正确深复制和 codec；JSON 适配器有明确尺寸、深度和数值范围。尚未发布 Mooncakes 注册包，已验证源码 workspace 接入。具体通过与否以赛事最终审核为准。
+当前仍为单用户全量快照历史，容量限制步数而非字节；不做 CRDT 协同、不回滚外部副作用、不宣称大文档增量压缩。接入方负责正确深复制和 codec；JSON 适配器有明确尺寸、深度和数值范围。已发布 Mooncakes 0.2.2 并验证无本地 workspace 的公开安装，仍保留源码接入方式。新版指南的九条证据见 [REVIEW-CHECKLIST.md](REVIEW-CHECKLIST.md)。具体通过与否以赛事最终审核为准。

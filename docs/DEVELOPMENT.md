@@ -13,7 +13,9 @@ node scripts/serve.mjs
 
 ## 接入自己的 MoonBit 数据类型
 
-将本库和你的模块放进同一 `moon.work`，模块声明 `import { "YeeHh2004/moonundo@0.2.1" }`，包声明 `import { "YeeHh2004/moonundo" @undo }`。目前尚未发布 Mooncakes 注册包，应使用源码 workspace，不能把 `moon add` 当作已可用的安装路径。可直接运行 `node scripts/check-consumer.mjs` 查看一个真正独立模块的导入验证。
+已发布 [Mooncakes 0.2.2](https://mooncakes.io/docs/YeeHh2004/moonundo)。普通接入运行 `moon add YeeHh2004/moonundo@0.2.2`，并在包中声明 `import { "YeeHh2004/moonundo" @undo }`。运行 `node scripts/check-consumer.mjs --registry` 可在无 workspace 的临时项目中复现公开安装、核心源码核对、构建与两个后端的测试/运行。
+
+同时开发库与应用时，也可以把二者放进同一 `moon.work`，模块声明 `import { "YeeHh2004/moonundo@0.2.2" }`；`node scripts/check-consumer.mjs` 使用这一源码 workspace 模式。前者验证正式分发，后者验证当前工作区，两者用途不同。
 
 `History[T]` 接受状态初值、纯深复制函数和纯比较函数。`examples/typed/main.mbt` 展示自定义 `Document` 结构体中可变数组的隔离：调用方修改输入或查询返回值，不改变内部历史。嵌套对象需要逐层复制；不可变数据可以用恒等复制。[examples/consumer](../examples/consumer/) 是可复制的独立模块，包含更完整的嵌套文档、应用 codec 和三个工作流测试；接入检查会在临时 workspace 中验证，并在结束后清理。
 
@@ -69,12 +71,16 @@ node scripts/verify.mjs --browser
 
 ## 发布
 
+Mooncakes 使用 `.moonignore` 单独定义源码分发范围。运行 `python scripts/check-mooncake.py` 检查 `moon package` 生成的真实 ZIP：必须含 MoonBit 源码、测试、可运行示例、专用 README、LICENSE 和完整上游 NOTICE，且不含浏览器/Node 宿主、缓存或凭据。首次发布按 [官方流程](https://docs.moonbitlang.com/en/stable/toolchain/moon/package-manage-tour.html) 完成 `moon login` 后运行 `moon publish`，随后用 `node scripts/check-consumer.mjs --registry` 验证。凭据只放在本机 MoonBit 配置目录，不写入源码或 CI。已发布版本不可随意覆盖；更新实现应递增版本。
+
+GitHub Release 发布后，[registry.yml](../.github/workflows/registry.yml) 自动在 Linux 和 Windows 验证公开包。该流程没有发布密钥，只执行公开下载、核心源码比对、构建和运行。
+
 打包工具仅依赖 Python 3 标准库、Node、Git 和固定 MoonBit 工具链：
 
 ```sh
 python scripts/package_release.py
 ```
 
-它要求工作区干净，重新编译，以 Git 提交对象收集源码，加入预编译引擎、网页许可、启动说明、构建信息及逐文件 SHA-256 清单，然后校验 ZIP 内容。输出 `dist/MoonUndo-v0.2.1.zip`；可用 `--output <目录>` 改路径。固定 ZIP 文件排序、权限和提交时间戳；同一源码与编译产物可得到一致压缩包。压缩包不包含 `.git`、依赖缓存或凭据，完整提交历史保留在 GitHub。
+它要求工作区干净，重新编译，以 Git 提交对象收集源码，加入预编译引擎、网页许可、启动说明、构建信息及逐文件 SHA-256 清单，然后校验 ZIP 内容。输出 `dist/MoonUndo-v0.2.2.zip`；可用 `--output <目录>` 改路径。固定 ZIP 文件排序、权限和提交时间戳；同一源码与编译产物可得到一致压缩包。压缩包不包含 `.git`、依赖缓存或凭据，完整提交历史保留在 GitHub。
 
 先确认目标提交 CI 全绿，再发布同一提交的 tag、Release 和 ZIP。在线演示只部署 CI 成功且仍为 main 最新提交的产物，公开 `build-info.json` 可核对版本和 sourceCommit。保留完整 [NOTICE](../NOTICE.md) 与 [licenses](../licenses)，不要在分发预编译引擎时仅保留项目自己的许可证。

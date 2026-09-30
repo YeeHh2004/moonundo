@@ -15,7 +15,8 @@ try {
   const run=args=>execFileSync('moon',args,{cwd:consumer,stdio:'inherit'});
   if(registry) {
     // No workspace or path dependency: resolution must use the public registry.
-    run(['update']);
+    // Exercise the README's installation command from a manifest with no dependency.
+    writeFileSync(join(consumer,'moon.mod'),'name = "moonundo-examples/document-workflow"\n\nversion = "0.1.0"\n');
     run(['add',`YeeHh2004/moonundo@${version}`]);
     run(['build','--target','js']);
     run(['tree']);
