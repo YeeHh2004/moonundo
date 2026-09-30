@@ -36,6 +36,18 @@ jobs:
       - run: node scripts/build.mjs
       - run: node --test tests/*.test.mjs
       - run: node scripts/check-consumer.mjs
+      - name: Check Mooncakes source archive
+        run: python scripts/check-mooncake.py
+      - name: Measure MoonBit core coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        run: |
+          moon coverage analyze -- -f summary -p YeeHh2004/moonundo
+          moon coverage report -f cobertura -p YeeHh2004/moonundo -o _build/core-coverage.xml
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        with:
+          name: moonbit-core-coverage
+          path: _build/core-coverage.xml
       - name: Install pinned browser test runner
         if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
         run: npm install --no-save --package-lock=false playwright@1.62.1

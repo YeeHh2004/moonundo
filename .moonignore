@@ -1,0 +1,18 @@
+# Mooncakes distributes the MoonBit library, its tests and runnable MoonBit examples.
+# Browser/Node hosts and repository automation remain available on GitHub/Releases.
+_build/
+.mooncakes/
+node_modules/
+dist/
+web/
+cli/
+bridge/
+scripts/
+tests/
+examples/consumer/
+docs/*
+!docs/MOONCAKES.md
+README.md
+package.json
+AGENTS.md
+*.log
