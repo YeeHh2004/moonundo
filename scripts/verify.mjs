@@ -1,0 +1,12 @@
+import {execFileSync} from 'node:child_process';
+import {readdirSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const run=(binary,args)=>execFileSync(binary,args,{cwd:root,stdio:'inherit'});
+for(const args of [['fmt','--check'],['check','--target','js'],['test','--target','js'],['test','--target','wasm-gc']])run('moon',args);
+run(process.execPath,['scripts/build.mjs']);
+const tests=readdirSync(new URL('../tests/',import.meta.url)).filter(f=>f.endsWith('.test.mjs')).sort().map(f=>'tests/'+f);
+run(process.execPath,['--test',...tests]);
+run(process.execPath,['scripts/check-consumer.mjs']);
+if(process.argv.includes('--browser'))run(process.execPath,['tests/browser.mjs']);
+console.log('MoonUndo verification completed successfully.');

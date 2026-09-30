@@ -54,4 +54,12 @@ jobs:
         if: always() && matrix.os == 'ubuntu-latest' && matrix.node == '22'
         with:
           name: browser-screenshots
-          path: docs/screenshots/
+          path: dist/browser-screenshots/
+      - name: Package verified source and precompiled engine
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        run: python3 scripts/package_release.py
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        with:
+          name: moonundo-release
+          path: dist/MoonUndo-*.zip

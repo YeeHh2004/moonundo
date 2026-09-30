@@ -133,7 +133,7 @@ $('save').onclick=()=>{
 $('restore').onclick=()=>{try{const text=localStorage.getItem('moonundo:'+kind);if(!text)throw new Error('当前示例还没有本机存档。');loadEnvelope(JSON.parse(text));message('已恢复本机存档，撤销和重做仍然可用。');}catch(error){message(error.message,true);}};
 $('export').onclick=()=>{
   try {
-  const url=URL.createObjectURL(new Blob([JSON.stringify(envelope(models[kind].exportSession()),null,2)],{type:'application/json'}));
+  const url=URL.createObjectURL(new Blob([JSON.stringify(envelope(models[kind].exportSession()))],{type:'application/json'}));
   const a=document.createElement('a');a.href=url;a.download=`moonundo-${kind}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);message('历史文件已交给浏览器下载；保存点未改变。');
   } catch(error) { message('无法导出，请缩小历史容量后重试：'+error.message,true); }
 };

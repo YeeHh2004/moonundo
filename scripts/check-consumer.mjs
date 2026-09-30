@@ -1,4 +1,4 @@
-import {mkdtempSync, mkdirSync, writeFileSync} from 'node:fs';
+import {mkdtempSync, mkdirSync, writeFileSync, readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -7,7 +7,8 @@ const root=fileURLToPath(new URL('../',import.meta.url)).replaceAll('\\','/');
 const workspace=mkdtempSync(join(tmpdir(),'moonundo-consumer-'));
 const consumer=join(workspace,'consumer');mkdirSync(consumer);
 writeFileSync(join(workspace,'moon.work'),`members = [${JSON.stringify(root)}, "consumer"]\n`);
-writeFileSync(join(consumer,'moon.mod'),'name = "acceptance/consumer"\nimport { "YeeHh2004/moonundo@0.1.0" }\n');
+const {version}=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
+writeFileSync(join(consumer,'moon.mod'),`name = "acceptance/consumer"\nimport { "YeeHh2004/moonundo@${version}" }\n`);
 writeFileSync(join(consumer,'moon.pkg'),'import { "YeeHh2004/moonundo" @undo }\n');
 writeFileSync(join(consumer,'consumer.mbt'),`///|
 pub fn create() -> @undo.History[Array[Int]] {

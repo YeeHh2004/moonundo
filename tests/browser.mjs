@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {mkdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
+import {join, resolve} from 'node:path';
 const {chromium} = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = fileURLToPath(new URL('../',import.meta.url));
+const screenshotDir=resolve(root,process.env.BROWSER_SCREENSHOT_DIR || 'dist/browser-screenshots');
 const server = spawn(process.execPath,['scripts/serve.mjs'],{cwd:root,env:{...process.env,PORT:'4179'},stdio:'pipe'});
 let browser;
 try {
@@ -70,8 +72,8 @@ try {
   await page.locator('#rollback').click();
   assert.equal(await page.locator('#name').inputValue(),'MoonUndo Studio');
   await page.locator('#save').click();
-  await mkdir(new URL('../docs/screenshots/',import.meta.url),{recursive:true});
-  await page.screenshot({path:new URL('../docs/screenshots/settings.png',import.meta.url).pathname.replace(/^\/(?=[A-Za-z]:)/,''),fullPage:true});
+  await mkdir(screenshotDir,{recursive:true});
+  await page.screenshot({path:join(screenshotDir,'settings.png'),fullPage:true});
 
   await page.locator('[data-tab="tasks"]').click();
   await page.locator('#task-title').fill('验收演示 <script>');
@@ -85,7 +87,7 @@ try {
   assert.equal(await page.locator('#task-list .done').count(),3);
   await page.locator('#undo').click();
   assert.equal(await page.locator('#task-list .done').count(),0);
-  await page.screenshot({path:fileURLToPath(new URL('../docs/screenshots/tasks.png',import.meta.url)),fullPage:true});
+  await page.screenshot({path:join(screenshotDir,'tasks.png'),fullPage:true});
 
   await page.locator('[data-tab="canvas"]').click();
   const shape=page.locator('[data-id="1"]');
@@ -99,10 +101,10 @@ try {
   assert.equal(await shape.getAttribute('style'),before);
   await page.locator('#redo').click();
   await page.locator('#color-shape').click();
-  await page.screenshot({path:fileURLToPath(new URL('../docs/screenshots/canvas.png',import.meta.url)),fullPage:true});
+  await page.screenshot({path:join(screenshotDir,'canvas.png'),fullPage:true});
   await page.setViewportSize({width:390,height:844});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile page must not overflow horizontally');
-  await page.screenshot({path:fileURLToPath(new URL('../docs/screenshots/mobile.png',import.meta.url)),fullPage:true});
+  await page.screenshot({path:join(screenshotDir,'mobile.png'),fullPage:true});
   assert.deepEqual(errors,[]);
   console.log('Browser acceptance passed: settings transactions, saved session, export/import, tasks, drag grouping, mobile layout, no runtime errors.');
 } finally { await browser?.close(); server.kill(); }
