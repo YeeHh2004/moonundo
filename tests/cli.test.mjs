@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
+import {mkdtempSync, openSync, closeSync, ftruncateSync, unlinkSync, rmdirSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {replay, reduce} from '../web/moonundo.mjs';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const cli = (args = [], input = '') => spawnSync(process.execPath, ['cli/moonundo.mjs', ...args], {cwd: root, input, encoding: 'utf8'});
@@ -39,4 +42,16 @@ test('compiled reducer and history interoperate for ordinary application state',
   const result = JSON.parse(replay(JSON.stringify({initial,commands:[{op:'record',value:next.state,label:'Add task'},{op:'undo'},{op:'redo'}]})));
   assert.deepEqual(result.state.items, [{id:1,title:'Ship',done:false}]);
   assert.equal(result.undo_depth, 1);
+});
+
+test('CLI stops oversized file and stdin streams with a bounded-input error',()=>{
+  const folder=mkdtempSync(join(tmpdir(),'moonundo-cli-')), file=join(folder,'large.json');
+  try{
+    const descriptor=openSync(file,'w');ftruncateSync(descriptor,8_000_001);closeSync(descriptor);
+    const fromFile=cli([file]);assert.equal(fromFile.status,2);assert.match(fromFile.stderr,/exceeds 8 MB/);
+    const fromStdin=cli([],Buffer.alloc(8_000_001,32));assert.equal(fromStdin.status,2);assert.match(fromStdin.stderr,/exceeds 8 MB/);
+  }finally{unlinkSync(file);rmdirSync(folder);}
+});
+test('CLI exposes version information for reproducible reports',()=>{
+  const result=cli(['--version']);assert.equal(result.status,0);assert.match(result.stdout,/^MoonUndo \d+\.\d+\.\d+/);
 });
