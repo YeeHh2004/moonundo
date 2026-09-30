@@ -9,7 +9,7 @@ function checked(text) {
 // UI owns a handle and display state; all history transitions run in MoonBit.
 export class EditorModel {
   constructor(request) {
-    this.handle = checked(open_editor(JSON.stringify(request))).handle;
+    this.handle = checked(open_editor(JSON.stringify({...request,include_session:false}))).handle;
     this.epoch = 0;
     this.result = checked(dispatch_editor(this.handle, '{"op":"status"}'));
   }

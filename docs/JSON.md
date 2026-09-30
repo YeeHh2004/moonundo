@@ -37,6 +37,8 @@ The browser's downloadable file wraps this session in `{ "format": "moonundo-dem
 
 MoonBit: `JsonEditor::new(text) -> Result[JsonEditor, String]`, `editor.dispatch(text) -> String`, `editor.status() -> String`. Constructor input is `{initial,limit?}` or `{session}`; a `commands` property is rejected. Methods use the same status schema and operations as replay, except these additional commands:
 
+Both constructor forms also accept optional `include_session: false`. This omits the `session` property from status and ordinary command responses, avoiding a copy and serialization of every historical snapshot on each edit. Current `state`, timeline, savepoint status and all other metadata remain available. Explicit `export` and `prepare_save` still return complete archives. The default is `true` for backward compatibility, and `replay` remains unchanged. Browser demos use `false`; consumers of `EditorModel` must call `exportSession()` when they need an archive. Only booleans are accepted for this option.
+
 | op | Result | Mutates history? |
 | --- | --- | --- |
 | status | Full status object | No |
@@ -45,6 +47,6 @@ MoonBit: `JsonEditor::new(text) -> Result[JsonEditor, String]`, `editor.dispatch
 
 For browser/Node ESM, `open_editor(text)` returns JSON `{ok:true,handle}`; `dispatch_editor(handle,text)` returns JSON status/error; `close_editor(handle)` returns whether that handle was live. At most 64 editors may be open. Replacing/closing an editor releases its capacity and references; handles are never reused. Keep handles private to the owning app, validate success responses, and close editors in `finally` when finished. Unknown/closed handles return an error. These are in-process handles, not network authentication tokens.
 
-There is no total operation-count limit on a live editor. Each request still has the 2-million-code-unit / depth-64 constraints; export and prepare_save check that the session can pass those same request constraints before returning it. Accumulating large snapshots can exceed that archive limit: reduce history capacity or use typed codecs/storage suited to the application. Rejected export/save preparation leaves live state unchanged. Browser downloads use compact JSON; the import file limit is 8 MB to accommodate UTF-8 text. Version 1 session files from 0.1.x remain supported.
+There is no total operation-count limit on a live editor. Each request still has the 2-million-code-unit / depth-64 constraints; export and prepare_save check the final candidate after changing saved_id when applicable, including the compact-mode option needed to reopen it. Accumulating large snapshots can exceed that archive limit: reduce history capacity or use typed codecs/storage suited to the application. Rejected export/save preparation leaves live state unchanged. Browser downloads use compact JSON; the import file limit is 8 MB to accommodate UTF-8 text. Version 1 session files from 0.1.x remain supported.
 
 To persist: prepare_save → synchronous storage of its returned session → save. If storage throws, omit save. For asynchronous storage, serialize edits or check revision identity before marking the live state saved; do not mark a different revision clean. `web/editor-model.mjs` is the tested synchronous localStorage integration.

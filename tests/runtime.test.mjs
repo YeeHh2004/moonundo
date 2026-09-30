@@ -7,6 +7,42 @@ const open = initial => {
 };
 const send=(id,command)=>JSON.parse(dispatch_editor(id,JSON.stringify(command)));
 
+test('compact responses keep full state and timeline while exporting history only on demand',()=>{
+  const initial={items:Array.from({length:120},(_,id)=>({id,title:'Task '+id,meta:{tags:['work'],done:false}}))};
+  const opened=JSON.parse(open_editor(JSON.stringify({initial,limit:25,include_session:false})));
+  assert.equal(opened.ok,true,opened.error);
+  try{
+    let state=initial, result;
+    for(let i=0;i<40;i++){
+      state=structuredClone(state);state.items[i].meta.done=true;
+      result=send(opened.handle,{op:'record',value:state,label:'Complete task'});
+      assert.equal(result.ok,true);assert.equal('session' in result,false);
+    }
+    assert.deepEqual(result.state,state);assert.equal(result.timeline.length,26);
+    const exported=send(opened.handle,{op:'export'});
+    assert.equal(exported.session.revisions.length,26);
+    const restored=JSON.parse(open_editor(JSON.stringify({session:exported.session,include_session:false})));
+    assert.equal(restored.ok,true,restored.error);
+    try{
+      assert.deepEqual(send(restored.handle,{op:'status'}),result);
+      assert.equal(send(restored.handle,{op:'undo'}).state.items[39].meta.done,false);
+    }finally{close_editor(restored.handle);}
+    assert.ok(JSON.stringify(result).length*10<JSON.stringify(exported).length);
+  }finally{close_editor(opened.handle);}
+});
+
+test('prepare_save validates the final savepoint width at the exact request-size boundary',()=>{
+  const session={version:1,limit:1,cursor:0,next_id:11,saved_id:0,revisions:[{id:10,label:'Current',value:''}]};
+  session.revisions[0].value='a'.repeat(2000000-JSON.stringify({session}).length);
+  const request=JSON.stringify({session});assert.equal(request.length,2000000);
+  const opened=JSON.parse(open_editor(request));assert.equal(opened.ok,true,opened.error);
+  try{
+    assert.equal(send(opened.handle,{op:'export'}).ok,true);
+    assert.match(send(opened.handle,{op:'prepare_save'}).error,/exceeds/);
+    assert.equal(send(opened.handle,{op:'status'}).dirty,true);
+  }finally{close_editor(opened.handle);}
+});
+
 test('incremental history agrees with replay including nested transactions, grouping and saves',()=>{
   const id=open(0), commands=[];
   try{

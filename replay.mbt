@@ -163,11 +163,7 @@ fn history_from_request(request : Json) -> History[Json] raise {
 }
 
 ///|
-fn status_json(h : History[Json]) -> Json {
-  let session = match h.export_session(json_copy) {
-    Ok(v) => v
-    Err(_) => Json::null()
-  }
+fn status_json(h : History[Json], include_session? : Bool = true) -> Json {
   let response : Json = {
     "ok": true,
     "state": h.state(),
@@ -188,7 +184,12 @@ fn status_json(h : History[Json]) -> Json {
     "capacity": h.capacity(),
     "revision_id": h.revision_id(),
     "timeline": h.timeline(),
-    "session": session,
+  }
+  if include_session && response is Object(fields) {
+    fields["session"] = match h.export_session(fn(v) { v }) {
+      Ok(v) => v
+      Err(_) => Json::null()
+    }
   }
   response
 }

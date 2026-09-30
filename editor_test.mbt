@@ -9,6 +9,42 @@ fn editor_result(
 }
 
 ///|
+test "compact status omits archives but preserves metadata and explicit export" {
+  let full = @moonundo.JsonEditor::new("{\"initial\":0}").unwrap()
+  let compact = @moonundo.JsonEditor::new(
+    "{\"initial\":0,\"include_session\":false}",
+  ).unwrap()
+  let commands : Array[Json] = [
+    { "op": "record", "value": 1 },
+    { "op": "begin", "label": "batch" },
+    { "op": "record", "value": 2 },
+    { "op": "commit" },
+    { "op": "save" },
+    { "op": "undo" },
+    { "op": "redo" },
+  ]
+  for command in commands {
+    let expected = editor_result(full, command)
+    let actual = editor_result(compact, command)
+    assert_true(expected.contains("session"))
+    assert_true(!actual.contains("session"))
+    for key, value in expected {
+      if key != "session" {
+        assert_eq(actual[key], value)
+      }
+    }
+  }
+  assert_eq(
+    editor_result(compact, { "op": "export" })["session"],
+    editor_result(full, { "op": "export" })["session"],
+  )
+  assert_true(
+    @moonundo.JsonEditor::new("{\"initial\":0,\"include_session\":\"false\"}")
+    is Err(_),
+  )
+}
+
+///|
 test "incremental editor survives long transactions and keeps one undo step" {
   let editor = @moonundo.JsonEditor::new("{\"initial\":0}").unwrap()
   ignore(editor_result(editor, { "op": "begin", "label": "long edit" }))

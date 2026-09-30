@@ -22,11 +22,12 @@ test('all imported snapshots validate before replacing an editor, and failed imp
   const m=new EditorModel({initial});
   try{
     m.apply({op:'record',value:{...initial,name:'valid current'}});
-    const invalid=structuredClone(m.result.session);invalid.revisions[0].value.theme='invalid';
+    const session=m.exportSession();
+    const invalid=structuredClone(session);invalid.revisions[0].value.theme='invalid';
     for(let i=0;i<80;i++)assert.throws(()=>EditorModel.fromEnvelope(envelope(invalid),'settings'),/应用数据无效/);
-    const valid=EditorModel.fromEnvelope(envelope(m.result.session),'settings');
+    const valid=EditorModel.fromEnvelope(envelope(session),'settings');
     try{assert.equal(valid.result.state.name,'valid current');}finally{valid.close();}
-    assert.throws(()=>EditorModel.fromEnvelope(envelope(m.result.session),'tasks'),/当前示例/);
+    assert.throws(()=>EditorModel.fromEnvelope(envelope(session),'tasks'),/当前示例/);
     assert.equal(m.result.state.name,'valid current');
   }finally{m.close();}
 });
@@ -37,6 +38,7 @@ test('edits exceed old script-size and command limits without accumulating repla
     assert.equal(m.result.undo_depth,1);assert.equal(m.result.state.i,2199);
     m.apply({op:'undo'});assert.deepEqual(m.result.state,{text:'a'.repeat(5000)});
     assert.equal('commands' in m,false);
+    assert.equal('session' in m.result,false,'UI updates do not serialize the whole archive');
   }finally{m.close();}
 });
 

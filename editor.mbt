@@ -2,6 +2,7 @@
 /// Incremental JSON adapter. Owns a history, not a growing replay script.
 pub struct JsonEditor {
   priv history : History[Json]
+  priv include_session : Bool
 }
 
 ///|
@@ -12,7 +13,10 @@ pub fn JsonEditor::new(text : String) -> Result[JsonEditor, String] {
     if request is Object(fields) && fields.contains("commands") {
       return Err("JsonEditor construction does not accept replay commands")
     }
-    Ok({ history: history_from_request(request), })
+    let include_session : Bool = @json.from_json(
+      optional(request, "include_session", true),
+    )
+    Ok({ history: history_from_request(request), include_session, })
   } catch {
     error => Err(error_message(error))
   }
@@ -21,7 +25,7 @@ pub fn JsonEditor::new(text : String) -> Result[JsonEditor, String] {
 ///|
 /// Return an isolated JSON snapshot of state, metadata and committed session.
 pub fn JsonEditor::status(self : JsonEditor) -> String {
-  status_json(self.history).stringify()
+  status_json(self.history, include_session=self.include_session).stringify()
 }
 
 ///|
@@ -33,13 +37,17 @@ pub fn JsonEditor::dispatch(self : JsonEditor, text : String) -> String {
     let command = parse_request(text)
     let op = string_field(command, "op")
     if op == "prepare_save" || op == "export" {
-      let session = require(self.history.export_session(json_copy))
-      // Never hand the host a JSON archive that this adapter cannot reopen.
-      let request : Json = { "session": session }
-      ignore(parse_request(request.stringify()))
+      let session = require(self.history.export_session(fn(v) { v }))
       if op == "prepare_save" && session is Object(fields) {
         fields["saved_id"] = self.history.revision_id().to_json()
       }
+      // Validate the final candidate, including the new savepoint's width.
+      let request : Json = if self.include_session {
+        { "session": session }
+      } else {
+        { "session": session, "include_session": false }
+      }
+      ignore(parse_request(request.stringify()))
       let response : Json = { "ok": true, "session": session }
       return response.stringify()
     }
