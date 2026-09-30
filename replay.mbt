@@ -83,33 +83,8 @@ fn apply_command(h : History[Json], command : Json) -> Unit raise {
 /// Errors produce no output session; callers keep their previous document.
 pub fn replay(text : String) -> String {
   try {
-    if text.length() > 2000000 {
-      raise ReplayError("request exceeds 2 million UTF-16 units")
-    }
-    let request = @json.parse(text)
-    validate_json(request, 0)
-    let h = match optional(request, "session", Json::null()) {
-      Null => {
-        let limit = require(exact_int(optional(request, "limit", 100)))
-        require(
-          History::new(
-            field(request, "initial"),
-            copy=json_copy,
-            equal=fn(a, b) { a == b },
-            limit~,
-          ),
-        )
-      }
-      session =>
-        require(
-          restore_session(session, fn(v) { Ok(json_copy(v)) }, copy=json_copy, equal=fn(
-            a,
-            b,
-          ) {
-            a == b
-          }),
-        )
-    }
+    let request = parse_request(text)
+    let h = history_from_request(request)
     guard field(request, "commands") is Array(commands) else {
       raise ReplayError("commands must be an array")
     }
@@ -119,32 +94,7 @@ pub fn replay(text : String) -> String {
     for command in commands {
       apply_command(h, command)
     }
-    let session = match h.export_session(json_copy) {
-      Ok(v) => v
-      Err(_) => Json::null()
-    }
-    let response : Json = {
-      "ok": true,
-      "state": h.state(),
-      "dirty": h.is_dirty(),
-      "can_undo": h.can_undo(),
-      "can_redo": h.can_redo(),
-      "undo_label": match h.undo_label() {
-        Some(label) => label.to_json()
-        None => Json::null()
-      },
-      "redo_label": match h.redo_label() {
-        Some(label) => label.to_json()
-        None => Json::null()
-      },
-      "undo_depth": h.undo_depth(),
-      "redo_depth": h.redo_depth(),
-      "transaction_depth": h.transaction_depth(),
-      "revision_id": h.revision_id(),
-      "timeline": h.timeline(),
-      "session": session,
-    }
-    response.stringify()
+    status_json(h).stringify()
   } catch {
     error => {
       let response : Json = { "ok": false, "error": error.to_string() }
@@ -175,4 +125,61 @@ fn validate_json(value : Json, depth : Int) -> Unit raise ReplayError {
       }
     _ => ()
   }
+}
+
+///|
+fn history_from_request(request : Json) -> History[Json] raise {
+  match optional(request, "session", Json::null()) {
+    Null => {
+      let limit = require(exact_int(optional(request, "limit", 100)))
+      require(
+        History::new(
+          field(request, "initial"),
+          copy=json_copy,
+          equal=fn(a, b) { a == b },
+          limit~,
+        ),
+      )
+    }
+    session =>
+      require(
+        restore_session(session, fn(v) { Ok(json_copy(v)) }, copy=json_copy, equal=fn(
+          a,
+          b,
+        ) {
+          a == b
+        }),
+      )
+  }
+}
+
+///|
+fn status_json(h : History[Json]) -> Json {
+  let session = match h.export_session(json_copy) {
+    Ok(v) => v
+    Err(_) => Json::null()
+  }
+  let response : Json = {
+    "ok": true,
+    "state": h.state(),
+    "dirty": h.is_dirty(),
+    "can_undo": h.can_undo(),
+    "can_redo": h.can_redo(),
+    "undo_label": match h.undo_label() {
+      Some(label) => label.to_json()
+      None => Json::null()
+    },
+    "redo_label": match h.redo_label() {
+      Some(label) => label.to_json()
+      None => Json::null()
+    },
+    "undo_depth": h.undo_depth(),
+    "redo_depth": h.redo_depth(),
+    "transaction_depth": h.transaction_depth(),
+    "capacity": h.capacity(),
+    "revision_id": h.revision_id(),
+    "timeline": h.timeline(),
+    "session": session,
+  }
+  response
 }

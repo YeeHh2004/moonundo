@@ -2,6 +2,12 @@
 package "YeeHh2004/moonundo/bridge"
 
 // Values
+pub fn close_editor(Int) -> Bool
+
+pub fn dispatch_editor(Int, String) -> String
+
+pub fn open_editor(String) -> String
+
 pub fn reduce(String) -> String
 
 pub fn replay(String) -> String

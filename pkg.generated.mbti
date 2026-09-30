@@ -41,6 +41,13 @@ pub fn[T] History::undo(Self[T]) -> Result[Bool, String]
 pub fn[T] History::undo_depth(Self[T]) -> Int
 pub fn[T] History::undo_label(Self[T]) -> String?
 
+pub struct JsonEditor {
+  // private fields
+}
+pub fn JsonEditor::dispatch(Self, String) -> String
+pub fn JsonEditor::new(String) -> Result[Self, String]
+pub fn JsonEditor::status(Self) -> String
+
 pub struct RevisionInfo {
   index : Int
   revision_id : Int
