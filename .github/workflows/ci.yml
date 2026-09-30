@@ -45,6 +45,14 @@ jobs:
       - name: Browser acceptance
         if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
         run: node tests/browser.mjs
+      - name: Verify realistic workloads and collect measurements
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        run: node scripts/benchmark-workloads.mjs --output dist/benchmark-workloads.json
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
+        with:
+          name: workload-benchmark
+          path: dist/benchmark-workloads.json
       - uses: actions/upload-artifact@v4
         if: matrix.os == 'ubuntu-latest' && matrix.node == '22'
         with:

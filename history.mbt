@@ -22,7 +22,8 @@ pub struct History[T] {
 }
 
 ///|
-/// Limit counts undoable revisions, not bytes. At most limit+1 states are held.
+/// Limit counts undoable revisions, not bytes. At most limit+1 committed snapshots
+/// are retained, in addition to the live copy and active transaction snapshots.
 pub fn[T] History::new(
   initial : T,
   copy~ : (T) -> T,
