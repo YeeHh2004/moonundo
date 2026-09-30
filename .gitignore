@@ -2,4 +2,8 @@ _build/
 .mooncakes/
 node_modules/
 web/moonundo.mjs
+web/build-info.json
+web/LICENSE.txt
+web/THIRD-PARTY-NOTICES.txt
+dist/
 .DS_Store

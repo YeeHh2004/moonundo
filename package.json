@@ -1,5 +1,5 @@
 {
-  "name": "moonundo-workbench", "version": "0.1.0", "private": true,
+  "name": "moonundo-workbench", "version": "0.2.0", "private": true,
   "type": "module", "engines": {"node": ">=20"},
   "scripts": {
     "build": "node scripts/build.mjs", "start": "node scripts/serve.mjs",
@@ -7,3 +7,4 @@
     "replay": "node cli/moonundo.mjs"
   }
 }
+
