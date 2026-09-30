@@ -14,7 +14,7 @@ pub fn JsonEditor::new(text : String) -> Result[JsonEditor, String] {
     }
     Ok({ history: history_from_request(request), })
   } catch {
-    error => Err(error.to_string())
+    error => Err(error_message(error))
   }
 }
 
@@ -32,9 +32,12 @@ pub fn JsonEditor::dispatch(self : JsonEditor, text : String) -> String {
   try {
     let command = parse_request(text)
     let op = string_field(command, "op")
-    if op == "prepare_save" {
+    if op == "prepare_save" || op == "export" {
       let session = require(self.history.export_session(json_copy))
-      if session is Object(fields) {
+      // Never hand the host a JSON archive that this adapter cannot reopen.
+      let request : Json = { "session": session }
+      ignore(parse_request(request.stringify()))
+      if op == "prepare_save" && session is Object(fields) {
         fields["saved_id"] = self.history.revision_id().to_json()
       }
       let response : Json = { "ok": true, "session": session }
@@ -46,7 +49,7 @@ pub fn JsonEditor::dispatch(self : JsonEditor, text : String) -> String {
     self.status()
   } catch {
     error => {
-      let response : Json = { "ok": false, "error": error.to_string() }
+      let response : Json = { "ok": false, "error": error_message(error) }
       response.stringify()
     }
   }

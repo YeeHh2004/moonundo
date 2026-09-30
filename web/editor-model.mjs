@@ -24,6 +24,9 @@ export class EditorModel {
     writeSynchronously(prepared.session); // A storage exception leaves history untouched.
     return this.apply({op:'save'});
   }
+  exportSession() {
+    return checked(dispatch_editor(this.handle, '{"op":"export"}')).session;
+  }
   close() {
     if (this.handle !== null) close_editor(this.handle);
     this.handle = null;

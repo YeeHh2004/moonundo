@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {open_editor,dispatch_editor,close_editor,replay} from '../web/moonundo.mjs';
+import {open_editor,dispatch_editor,close_editor,replay,reduce} from '../web/moonundo.mjs';
 const open = initial => {
   const result=JSON.parse(open_editor(JSON.stringify({initial,limit:8})));
   assert.equal(result.ok,true,result.error);return result.handle;
@@ -57,4 +57,15 @@ test('registry bounds active editors, releases capacity and never reuses stale h
     assert.notEqual(replacement,old);assert.equal(send(old,{op:'undo'}).ok,false);
     assert.equal(send(ids[0],{op:'status'}).state,0);
   }finally{ids.forEach(close_editor);}
+});
+
+test('adapters expose actionable error details instead of only exception type names',()=>{
+  assert.match(JSON.parse(replay('{"initial":0,"commands":[{"op":"unknown"}]}')).error,/unknown operation: unknown/);
+  assert.match(JSON.parse(open_editor('{"initial":0,"limit":0}')).error,/limit must be between/);
+  const id=open(0);
+  try{
+    assert.match(send(id,{op:'record'}).error,/missing field: value/);
+    assert.match(send(id,{op:'record',value:1,group:false}).error,/String|string/);
+  }finally{close_editor(id);}
+  assert.match(JSON.parse(reduce(JSON.stringify({kind:'tasks',state:{items:[],next_id:1},action:{type:'add',title:' '}}))).error,/enter a task title/);
 });

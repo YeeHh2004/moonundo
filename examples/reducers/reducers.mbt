@@ -260,7 +260,13 @@ pub fn reduce(text : String) -> String {
     output.stringify()
   } catch {
     error => {
-      let output : Json = { "ok": false, "error": error.to_string() }
+      let message = match error {
+        InputError(message) => message
+        @json.JsonDecodeError((path, message)) =>
+          path.to_string() + ": " + message
+        _ => error.to_string()
+      }
+      let output : Json = { "ok": false, "error": message }
       output.stringify()
     }
   }

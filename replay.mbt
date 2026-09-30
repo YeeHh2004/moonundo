@@ -97,9 +97,18 @@ pub fn replay(text : String) -> String {
     status_json(h).stringify()
   } catch {
     error => {
-      let response : Json = { "ok": false, "error": error.to_string() }
+      let response : Json = { "ok": false, "error": error_message(error) }
       response.stringify()
     }
+  }
+}
+
+///|
+fn error_message(error : Error) -> String {
+  match error {
+    ReplayError(message) => message
+    @json.JsonDecodeError((path, message)) => path.to_string() + ": " + message
+    _ => error.to_string()
   }
 }
 

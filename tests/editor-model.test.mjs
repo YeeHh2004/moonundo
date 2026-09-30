@@ -39,3 +39,18 @@ test('edits exceed old script-size and command limits without accumulating repla
     assert.equal('commands' in m,false);
   }finally{m.close();}
 });
+
+test('export does not change savepoint and rejects archives beyond adapter limits',()=>{
+  const m=new EditorModel({initial:0,limit:100});
+  try{
+    m.apply({op:'record',value:1});
+    const before=structuredClone(m.result);
+    const session=m.exportSession();assert.deepEqual(m.result,before);assert.equal(session.saved_id,0);
+    const text='a'.repeat(30000);
+    for(let i=0;i<70;i++)m.apply({op:'record',value:{text,i}});
+    assert.throws(()=>m.exportSession(),/exceeds/);
+    let wrote=false;assert.throws(()=>m.save(()=>{wrote=true;}),/exceeds/);assert.equal(wrote,false);
+    m.apply({op:'capacity',limit:5});
+    assert.equal(m.exportSession().revisions.length,6);
+  }finally{m.close();}
+});

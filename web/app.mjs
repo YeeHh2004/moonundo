@@ -132,14 +132,16 @@ $('save').onclick=()=>{
 };
 $('restore').onclick=()=>{try{const text=localStorage.getItem('moonundo:'+kind);if(!text)throw new Error('当前示例还没有本机存档。');loadEnvelope(JSON.parse(text));message('已恢复本机存档，撤销和重做仍然可用。');}catch(error){message(error.message,true);}};
 $('export').onclick=()=>{
-  const url=URL.createObjectURL(new Blob([JSON.stringify(envelope(models[kind].result.session),null,2)],{type:'application/json'}));
+  try {
+  const url=URL.createObjectURL(new Blob([JSON.stringify(envelope(models[kind].exportSession()),null,2)],{type:'application/json'}));
   const a=document.createElement('a');a.href=url;a.download=`moonundo-${kind}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);message('历史文件已交给浏览器下载；保存点未改变。');
+  } catch(error) { message('无法导出，请缩小历史容量后重试：'+error.message,true); }
 };
 $('import').onchange=async()=>{
   const originalKind=kind, model=models[kind], epoch=model.epoch;
   try{
     const file=$('import').files[0];if(!file)return;
-    if(file.size>2000000)throw new Error('文件需小于 2 MB。');
+    if(file.size>8000000)throw new Error('文件需小于 8 MB。');
     const data=JSON.parse(await file.text());
     if(kind!==originalKind || models[kind]!==model || model.epoch!==epoch)throw new Error('读取文件期间发生了编辑或切换，请重新导入。');
     loadEnvelope(data);message('历史已导入。');
