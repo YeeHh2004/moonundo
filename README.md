@@ -8,6 +8,8 @@ MoonUndo 是一个以 MoonBit 编写的独立 `History[T]` 库。应用保留自
 
 **[在线体验三个应用](https://yeehh2004.github.io/moonundo/)** · [验收步骤](docs/ACCEPTANCE.md) · [公开接口](pkg.generated.mbti)。在线演示只在 CI 全部通过后部署。
 
+**当前验收版本：v0.2.0。** [下载含预编译引擎的完整交付包](https://github.com/YeeHh2004/moonundo/releases/tag/v0.2.0)后，安装 Node.js 20+，直接执行 `node scripts/serve.mjs` 即可体验，无需先安装 MoonBit 或 npm 依赖。初审后的开发内容见 [最终验收说明](docs/FINAL-ACCEPTANCE.md)。
+
 Generic, framework-independent snapshot history for MoonBit application state. Original implementation, Apache-2.0; AI-assisted development is disclosed. Not a port of an existing undo library.
 
 ![设置表单示例](docs/screenshots/settings.png)
@@ -42,7 +44,7 @@ workspace/
   moon.work       // members = ["moonundo", "my-app"]
   moonundo/       // 本仓库
   my-app/
-    moon.mod      // import { "YeeHh2004/moonundo@0.1.1" }
+    moon.mod      // import { "YeeHh2004/moonundo@0.2.0" }
     moon.pkg      // import { "YeeHh2004/moonundo" @undo }
 ```
 
@@ -91,6 +93,8 @@ node cli/moonundo.mjs --help
 
 无参数或 `-` 从 stdin 读取；输出含当前状态、时间线和可恢复 session。成功退出 0，脚本拒绝退出 1，I/O 或用法错误退出 2。CLI 不覆盖输入文件。JSON 请求格式见 [docs/JSON.md](docs/JSON.md)。ESM 导出 `replay(text)`（核心适配）及 `reduce(text)`（三个示例的 MoonBit 业务逻辑）。
 
+交互应用使用新的 `JsonEditor` / ESM `open_editor`、`dispatch_editor`、`close_editor`，持续持有 MoonBit 历史实例，不累积回放脚本。浏览器三个示例均采用该方式；长事务和连续拖动不受 CLI 的 2,000 条回放脚本上限限制。`prepare_save` 生成待保存副本，持久化成功后再发送 `save`；失败不会改变保存点。接入及错误处理示例见 [开发说明](docs/DEVELOPMENT.md)。
+
 ## 验证
 
 ```sh
@@ -103,7 +107,7 @@ node --test tests/*.test.mjs
 node scripts/check-consumer.mjs
 ```
 
-当前 48 项 MoonBit 测试；独立模块检查额外增加 1 项。16 项 Node 测试包含 8 个种子、合计 4,000 次生成状态转换的独立模型对照，以及 CLI、坏存档、数值边界和示例接入。浏览器验收另行执行：
+可用 `node scripts/verify.mjs` 一次执行上述完整验证；加 `--browser` 运行浏览器验收（需先安装下述测试工具）。当前 55 项 MoonBit 测试；独立模块检查额外增加 1 项。29 项 Node 测试包含 8 个种子、合计 4,000 次生成状态转换的独立模型对照，以及 CLI、坏存档、数值边界、长时间编辑、存储失败、句柄生命周期、导出限制与发布文件校验。浏览器验收另行执行：
 
 ```sh
 npm install --no-save --package-lock=false playwright@1.62.1
@@ -111,7 +115,9 @@ npx playwright install chromium
 node tests/browser.mjs
 ```
 
-可设置 `BROWSER_CHANNEL=msedge` 使用已安装的 Edge。浏览器验收覆盖三个场景、保存/恢复、导入/导出、拖动合并及移动端布局。CI 覆盖 Linux Node 20/22、Windows Node 22；Linux Node 22 另运行 Chromium 验收。
+可设置 `BROWSER_CHANNEL=msedge` 使用已安装的 Edge。浏览器验收覆盖三个场景、保存/恢复、导入/导出、拖动合并、2,200 次事务内编辑后取消、存储配额失败、延迟导入期间的新编辑保护及移动端布局。截图写入 `dist/browser-screenshots/`，不修改源码。CI 覆盖 Linux Node 20/22、Windows Node 22；Linux Node 22 另运行 Chromium 验收，并构建带哈希清单的发布 ZIP。
+
+源码修改须使用固定 compiler/core `0.10.14+7d59c7ec9`。构建、维护、打包命令见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)。`node scripts/benchmark.mjs` 可复现两种适配路径的性能比较，不设跨机器性能承诺。
 
 ## 适用边界与来源
 

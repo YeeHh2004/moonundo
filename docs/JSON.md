@@ -17,7 +17,7 @@ Start with `{ "initial": <any JSON>, "limit": 50, "commands": [...] }`, or `{ "s
 | clear | none | Keep only current committed revision |
 | reset | `value` | Create a fresh, clean baseline |
 
-Successful output includes `state`, `dirty`, `can_undo`, `can_redo`, nullable `undo_label` and `redo_label`, depths, `transaction_depth`, `revision_id`, `timeline`, and `session`. An active preview yields `session: null` until commit/rollback. `undo_depth` and `redo_depth` describe committed history even while navigation is disabled.
+Successful output includes `state`, `dirty`, `can_undo`, `can_redo`, string-or-null `undo_label` and `redo_label`, depths, `transaction_depth`, `capacity`, `revision_id`, `timeline`, and `session`. An active preview yields `session: null` until commit/rollback. `undo_depth` and `redo_depth` describe committed history even while navigation is disabled.
 
 Session v1 shape:
 
@@ -32,3 +32,19 @@ Session v1 shape:
 ```
 
 The browser's downloadable file wraps this session in `{ "format": "moonundo-demo", "version": 1, "kind": "settings|tasks|canvas", "session": ... }`. This wrapper is application-specific; pass its `session` field to the generic adapter. The example `reduce` export takes `{ kind, state, action }` and returns `{ok,state}` or `{ok:false,error}`. It implements domain edits separately from core undo semantics.
+
+## Incremental editor API (0.2.0)
+
+MoonBit: `JsonEditor::new(text) -> Result[JsonEditor, String]`, `editor.dispatch(text) -> String`, `editor.status() -> String`. Constructor input is `{initial,limit?}` or `{session}`; a `commands` property is rejected. Methods use the same status schema and operations as replay, except these additional commands:
+
+| op | Result | Mutates history? |
+| --- | --- | --- |
+| status | Full status object | No |
+| export | `{ok:true,session}` with original savepoint | No |
+| prepare_save | `{ok:true,session}` with copied saved_id set to the current revision | No |
+
+For browser/Node ESM, `open_editor(text)` returns JSON `{ok:true,handle}`; `dispatch_editor(handle,text)` returns JSON status/error; `close_editor(handle)` returns whether that handle was live. At most 64 editors may be open. Replacing/closing an editor releases its capacity and references; handles are never reused. Keep handles private to the owning app, validate success responses, and close editors in `finally` when finished. Unknown/closed handles return an error. These are in-process handles, not network authentication tokens.
+
+There is no total operation-count limit on a live editor. Each request still has the 2-million-code-unit / depth-64 constraints; export and prepare_save check that the session can pass those same request constraints before returning it. Accumulating large snapshots can exceed that archive limit: reduce history capacity or use typed codecs/storage suited to the application. Rejected export/save preparation leaves live state unchanged. Browser downloads use compact JSON; the import file limit is 8 MB to accommodate UTF-8 text. Version 1 session files from 0.1.x remain supported.
+
+To persist: prepare_save → synchronous storage of its returned session → save. If storage throws, omit save. For asynchronous storage, serialize edits or check revision identity before marking the live state saved; do not mark a different revision clean. `web/editor-model.mjs` is the tested synchronous localStorage integration.
