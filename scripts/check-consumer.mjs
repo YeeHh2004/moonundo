@@ -1,33 +1,26 @@
-import {mkdtempSync, mkdirSync, writeFileSync, readFileSync} from 'node:fs';
+import {mkdtempSync, cpSync, writeFileSync, readFileSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {join, dirname, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
+import assert from 'node:assert/strict';
 const root=fileURLToPath(new URL('../',import.meta.url)).replaceAll('\\','/');
 const workspace=mkdtempSync(join(tmpdir(),'moonundo-consumer-'));
-const consumer=join(workspace,'consumer');mkdirSync(consumer);
-writeFileSync(join(workspace,'moon.work'),`members = [${JSON.stringify(root)}, "consumer"]\n`);
-const {version}=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
-writeFileSync(join(consumer,'moon.mod'),`name = "acceptance/consumer"\nimport { "YeeHh2004/moonundo@${version}" }\n`);
-writeFileSync(join(consumer,'moon.pkg'),'import { "YeeHh2004/moonundo" @undo }\n');
-writeFileSync(join(consumer,'consumer.mbt'),`///|
-pub fn create() -> @undo.History[Array[Int]] {
-  @undo.History::new([1], copy=fn(a) { a.copy() }, equal=fn(a,b) { a == b }).unwrap()
+const consumer=join(workspace,'consumer');
+try {
+  cpSync(new URL('../examples/consumer/',import.meta.url),consumer,{recursive:true,filter:source=>!/[\\/](_build|\.mooncakes)([\\/]|$)/.test(source)});
+  const {version}=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
+  assert.ok(readFileSync(join(consumer,'moon.mod'),'utf8').includes(`YeeHh2004/moonundo@${version}`),'example dependency must match the release');
+  writeFileSync(join(workspace,'moon.work'),`members = [\n  ${JSON.stringify(root)},\n  "consumer",\n]\n`);
+  const run=args=>execFileSync('moon',args,{cwd:consumer,stdio:'inherit'});
+  run(['fmt','--check']);
+  for(const target of ['js','wasm-gc']) {
+    run(['test','--target',target]);
+    run(['run','.','--target',target]);
+  }
+  console.log('Standalone document consumer passed on JS and Wasm GC: nested transactions, deep copy, typed codecs, savepoint/redo restore, invalid schema and branching.');
+} finally {
+  // Only remove the unique directory created by this process under the OS temp root.
+  assert.equal(dirname(resolve(workspace)),resolve(tmpdir()));
+  rmSync(workspace,{recursive:true,force:true});
 }
-`);
-writeFileSync(join(consumer,'integration_test.mbt'),`///|
-test "separate module imports public generic history" {
-  let h = @consumer.create()
-  ignore(h.begin("batch"))
-  ignore(h.record([1,2], "first"))
-  ignore(h.record([1,2,3], "second"))
-  ignore(h.commit())
-  assert_eq(h.undo_depth(), 1)
-  ignore(h.undo())
-  assert_eq(h.state(), [1])
-  ignore(h.redo())
-  assert_eq(h.state(), [1,2,3])
-}
-`);
-for(const target of ['js','wasm-gc'])execFileSync('moon',['test','--target',target],{cwd:consumer,stdio:'inherit'});
-console.log('Separate-module consumer passed on JS and Wasm GC.');

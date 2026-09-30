@@ -1,0 +1,6 @@
+import {
+  "YeeHh2004/moonundo" @undo,
+  "moonbitlang/core/json",
+}
+
+pkgtype(kind: "executable")
