@@ -8,7 +8,9 @@ MoonUndo 是一个以 MoonBit 编写的独立 `History[T]` 库。应用保留自
 
 **[在线体验三个应用](https://yeehh2004.github.io/moonundo/)** · [验收步骤](docs/ACCEPTANCE.md) · [公开接口](pkg.generated.mbti)。在线演示只在 CI 全部通过后部署。
 
-**当前验收版本：v0.2.0。** [下载含预编译引擎的完整交付包](https://github.com/YeeHh2004/moonundo/releases/tag/v0.2.0)后，安装 Node.js 20+，直接执行 `node scripts/serve.mjs` 即可体验，无需先安装 MoonBit 或 npm 依赖。初审后的开发内容见 [最终验收说明](docs/FINAL-ACCEPTANCE.md)。
+**当前版本：v0.2.1。** [下载含预编译引擎的完整交付包](https://github.com/YeeHh2004/moonundo/releases/tag/v0.2.1)后，安装 Node.js 20+，直接执行 `node scripts/serve.mjs` 即可体验，无需先安装 MoonBit 或 npm 依赖。
+
+仓库内可直接审阅：[独立 MoonBit 接入项目](examples/consumer/) · [真实数据性能与原始记录](docs/PERFORMANCE.md) · [功能完成度与验证证据](docs/FINAL-ACCEPTANCE.md) · [版本开发记录](CHANGELOG.md)。全部核心功能、示例、测试和说明均随源码公开。
 
 Generic, framework-independent snapshot history for MoonBit application state. Original implementation, Apache-2.0; AI-assisted development is disclosed. Not a port of an existing undo library.
 
@@ -44,7 +46,7 @@ workspace/
   moon.work       // members = ["moonundo", "my-app"]
   moonundo/       // 本仓库
   my-app/
-    moon.mod      // import { "YeeHh2004/moonundo@0.2.0" }
+    moon.mod      // import { "YeeHh2004/moonundo@0.2.1" }
     moon.pkg      // import { "YeeHh2004/moonundo" @undo }
 ```
 
@@ -63,7 +65,7 @@ ignore(h.undo())
 // h.state() == ["draft"]
 ```
 
-完整自定义文档类型例子见 [examples/typed](examples/typed/main.mbt)。[独立模块集成检查](scripts/check-consumer.mjs) 实际建立另一个模块并导入公开接口，JS/Wasm GC 两个后端均参与测试。
+简洁的自定义文档类型例子见 [examples/typed](examples/typed/main.mbt)。[完整独立模块](examples/consumer/) 进一步展示嵌套数组深复制、应用数据版本校验、嵌套事务、存档恢复、保存点与 redo、恢复后分支及容量裁剪。[接入检查](scripts/check-consumer.mjs) 在临时 workspace 中导入公开接口，运行三个流程测试与示例程序，JS/Wasm GC 两个后端均参与验证。
 
 可变数据必须提供正确的**深复制**函数；上例 `Array[String]` 的数组复制足够，嵌套可变对象需逐层复制。库复制传入及返回的状态，调用方修改这些对象不会改变内部历史。`copy`、`equal`、序列化 codec 必须是纯函数。
 
@@ -107,7 +109,7 @@ node --test tests/*.test.mjs
 node scripts/check-consumer.mjs
 ```
 
-可用 `node scripts/verify.mjs` 一次执行上述完整验证；加 `--browser` 运行浏览器验收（需先安装下述测试工具）。当前 55 项 MoonBit 测试；独立模块检查额外增加 1 项。29 项 Node 测试包含 8 个种子、合计 4,000 次生成状态转换的独立模型对照，以及 CLI、坏存档、数值边界、长时间编辑、存储失败、句柄生命周期、导出限制与发布文件校验。浏览器验收另行执行：
+可用 `node scripts/verify.mjs` 一次执行上述完整验证；加 `--browser` 运行浏览器验收（需先安装下述测试工具）。当前 56 项 MoonBit 测试；独立模块检查额外增加 3 项，所在 workspace 共 59 项。31 项 Node 测试包含 8 个种子、合计 4,000 次生成状态转换的独立模型对照，以及 CLI、坏存档、数值边界、长时间编辑、存储失败、句柄生命周期、按需导出、导出限制与发布文件校验。浏览器验收另行执行：
 
 ```sh
 npm install --no-save --package-lock=false playwright@1.62.1
@@ -117,7 +119,7 @@ node tests/browser.mjs
 
 可设置 `BROWSER_CHANNEL=msedge` 使用已安装的 Edge。浏览器验收覆盖三个场景、保存/恢复、导入/导出、拖动合并、2,200 次事务内编辑后取消、存储配额失败、延迟导入期间的新编辑保护及移动端布局。截图写入 `dist/browser-screenshots/`，不修改源码。CI 覆盖 Linux Node 20/22、Windows Node 22；Linux Node 22 另运行 Chromium 验收，并构建带哈希清单的发布 ZIP。
 
-源码修改须使用固定 compiler/core `0.10.14+7d59c7ec9`。构建、维护、打包命令见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)。`node scripts/benchmark.mjs` 可复现两种适配路径的性能比较，不设跨机器性能承诺。
+源码修改须使用固定 compiler/core `0.10.14+7d59c7ec9`。构建、维护、打包命令见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)。`node scripts/benchmark-workloads.mjs` 验证 100/500 条任务及嵌套文档在不同容量下的编辑、导出和恢复，CI 同时上传测量结果；[性能说明](docs/PERFORMANCE.md) 提供原始记录及适用边界，不设跨机器性能承诺。
 
 ## 适用边界与来源
 

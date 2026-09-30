@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1 — 2026-09-30
+
+- Add optional `include_session: false` to incremental editors and use it in the browser. Ordinary edits return current state and metadata without copying/serializing the entire archive. Default responses and v1 sessions remain compatible; explicit export/save preparation still return complete histories.
+- Validate the final save candidate after updating saved_id, including the compact-mode restore envelope, fixing a request-size boundary that could otherwise produce an unreadable saved file.
+- Replace the minimal generated consumer with a complete standalone MoonBit document module: nested mutable data, typed codecs, nested rollback, saved revision/redo restoration, invalid historical schemas, branching and pruning. Run three integration tests and the example on both backends.
+- Add reproducible 100/500-task and nested-document workloads, raw measurements, performance/space guidance, and a CI artifact. Compare final states and archives on every trial; no machine-dependent timing threshold.
+- 56 MoonBit tests on each backend, 3 standalone-consumer tests (59 total in its workspace), and 31 Node tests; existing browser acceptance remains enabled.
+
 ## 0.2.0 — 2026-09-30
 
 - Add incremental JsonEditor and bounded ESM handle lifecycle; migrate all three browser examples away from replaying a growing command log. Long transactions remain cancellable and continuous groups no longer split at a log compaction threshold.

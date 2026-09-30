@@ -6,7 +6,8 @@ pub struct JsonEditor {
 }
 
 ///|
-/// Accept {initial, limit?} or {session}; construction never executes commands.
+/// Accept {initial, limit?} or {session}; optional include_session defaults to true.
+/// Construction never executes commands.
 pub fn JsonEditor::new(text : String) -> Result[JsonEditor, String] {
   try {
     let request = parse_request(text)
@@ -23,7 +24,7 @@ pub fn JsonEditor::new(text : String) -> Result[JsonEditor, String] {
 }
 
 ///|
-/// Return an isolated JSON snapshot of state, metadata and committed session.
+/// Return isolated state and metadata, optionally including the committed session.
 pub fn JsonEditor::status(self : JsonEditor) -> String {
   status_json(self.history, include_session=self.include_session).stringify()
 }

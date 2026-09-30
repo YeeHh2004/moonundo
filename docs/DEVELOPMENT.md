@@ -13,9 +13,9 @@ node scripts/serve.mjs
 
 ## 接入自己的 MoonBit 数据类型
 
-将本库和你的模块放进同一 `moon.work`，模块声明 `import { "YeeHh2004/moonundo@0.2.0" }`，包声明 `import { "YeeHh2004/moonundo" @undo }`。目前尚未发布 Mooncakes 注册包，应使用源码 workspace，不能把 `moon add` 当作已可用的安装路径。可直接运行 `node scripts/check-consumer.mjs` 查看一个真正独立模块的导入验证。
+将本库和你的模块放进同一 `moon.work`，模块声明 `import { "YeeHh2004/moonundo@0.2.1" }`，包声明 `import { "YeeHh2004/moonundo" @undo }`。目前尚未发布 Mooncakes 注册包，应使用源码 workspace，不能把 `moon add` 当作已可用的安装路径。可直接运行 `node scripts/check-consumer.mjs` 查看一个真正独立模块的导入验证。
 
-`History[T]` 接受状态初值、纯深复制函数和纯比较函数。`examples/typed/main.mbt` 展示自定义 `Document` 结构体中可变数组的隔离：调用方修改输入或查询返回值，不改变内部历史。嵌套对象需要逐层复制；不可变数据可以用恒等复制。
+`History[T]` 接受状态初值、纯深复制函数和纯比较函数。`examples/typed/main.mbt` 展示自定义 `Document` 结构体中可变数组的隔离：调用方修改输入或查询返回值，不改变内部历史。嵌套对象需要逐层复制；不可变数据可以用恒等复制。[examples/consumer](../examples/consumer/) 是可复制的独立模块，包含更完整的嵌套文档、应用 codec 和三个工作流测试；接入检查会在临时 workspace 中验证，并在结束后清理。
 
 在用户开始批量修改时调用 begin，每次预览调用 record，确认后 commit，取消时 rollback。仅最外层 commit 增加一步历史。活动事务内导航和导出会返回 Err，应呈现给用户而非忽略；示例代码里的 unwrap/ignore 用于已知合法的演示步骤，生产接入应处理 Result。
 
@@ -27,7 +27,7 @@ node scripts/serve.mjs
 
 ```js
 import {open_editor, dispatch_editor, close_editor} from './moonundo.mjs';
-const opened = JSON.parse(open_editor(JSON.stringify({initial:{count:0},limit:50})));
+const opened = JSON.parse(open_editor(JSON.stringify({initial:{count:0},limit:50,include_session:false})));
 if (!opened.ok) throw new Error(opened.error);
 const send = command => {
   const result = JSON.parse(dispatch_editor(opened.handle,JSON.stringify(command)));
@@ -45,7 +45,7 @@ try {
 }
 ```
 
-长期编辑无需维护 commands 数组。`replay` 留给 CLI/批处理，其 2,000 条脚本上限不适用于长期存活的编辑器。至多同时打开 64 个编辑器，替换/销毁时调用 close；示例中导入失败也会释放候选实例。完整协议、限制与存档格式见 [JSON.md](JSON.md)。
+长期编辑无需维护 commands 数组。`include_session:false` 保留当前状态和元数据，省去每次传输完整历史；需要历史时显式 export 或 prepare_save。不指定该选项仍沿用旧的完整响应。`replay` 留给 CLI/批处理，其 2,000 条脚本上限不适用于长期存活的编辑器。至多同时打开 64 个编辑器，替换/销毁时调用 close；示例中导入失败也会释放候选实例。完整协议、限制与存档格式见 [JSON.md](JSON.md)，实际工作负载及容量选择见 [PERFORMANCE.md](PERFORMANCE.md)。
 
 ## 验证与维护
 
@@ -75,6 +75,6 @@ node scripts/verify.mjs --browser
 python scripts/package_release.py
 ```
 
-它要求工作区干净，重新编译，以 Git 提交对象收集源码，加入预编译引擎、网页许可、启动说明、构建信息及逐文件 SHA-256 清单，然后校验 ZIP 内容。输出 `dist/MoonUndo-v0.2.0.zip`；可用 `--output <目录>` 改路径。固定 ZIP 文件排序、权限和提交时间戳；同一源码与编译产物可得到一致压缩包。压缩包不包含 `.git`、依赖缓存或凭据，完整提交历史保留在 GitHub。
+它要求工作区干净，重新编译，以 Git 提交对象收集源码，加入预编译引擎、网页许可、启动说明、构建信息及逐文件 SHA-256 清单，然后校验 ZIP 内容。输出 `dist/MoonUndo-v0.2.1.zip`；可用 `--output <目录>` 改路径。固定 ZIP 文件排序、权限和提交时间戳；同一源码与编译产物可得到一致压缩包。压缩包不包含 `.git`、依赖缓存或凭据，完整提交历史保留在 GitHub。
 
 先确认目标提交 CI 全绿，再发布同一提交的 tag、Release 和 ZIP。在线演示只部署 CI 成功且仍为 main 最新提交的产物，公开 `build-info.json` 可核对版本和 sourceCommit。保留完整 [NOTICE](../NOTICE.md) 与 [licenses](../licenses)，不要在分发预编译引擎时仅保留项目自己的许可证。
