@@ -113,7 +113,7 @@ fn error_message(error : Error) -> String {
 }
 
 ///|
-fn validate_json(value : Json, depth : Int) -> Unit raise ReplayError {
+fn validate_json(value : Json, depth : Int32) -> Unit raise ReplayError {
   if depth > 64 {
     raise ReplayError("JSON nesting exceeds 64")
   }
@@ -163,7 +163,7 @@ fn history_from_request(request : Json) -> History[Json] raise {
 }
 
 ///|
-fn status_json(h : History[Json], include_session? : Bool = true) -> Json {
+fn status_json(h : History[Json], include_session~ : Bool = true) -> Json {
   let response : Json = {
     "ok": true,
     "state": h.state(),
@@ -171,11 +171,11 @@ fn status_json(h : History[Json], include_session? : Bool = true) -> Json {
     "can_undo": h.can_undo(),
     "can_redo": h.can_redo(),
     "undo_label": match h.undo_label() {
-      Some(label) => label.to_json()
+      Some(label) => @json.to_json(label)
       None => Json::null()
     },
     "redo_label": match h.redo_label() {
-      Some(label) => label.to_json()
+      Some(label) => @json.to_json(label)
       None => Json::null()
     },
     "undo_depth": h.undo_depth(),

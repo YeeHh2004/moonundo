@@ -3,7 +3,7 @@ fn run(kind : String, state : Json, action : Json) -> Json raise {
   let request : Json = { "kind": kind, "state": state, "action": action }
   let result = @json.parse(@reducers.reduce(request.stringify()))
   guard result is Object(fields) else { fail("expected object") }
-  assert_eq(fields["ok"], true.to_json())
+  assert_eq(fields["ok"], @json.to_json(true))
   fields["state"]
 }
 
@@ -89,6 +89,6 @@ test "invalid actions and duplicate task identities are rejected" {
   for request in requests {
     let result = @json.parse(@reducers.reduce(request.stringify()))
     guard result is Object(fields) else { fail("expected object") }
-    assert_eq(fields["ok"], false.to_json())
+    assert_eq(fields["ok"], @json.to_json(false))
   }
 }

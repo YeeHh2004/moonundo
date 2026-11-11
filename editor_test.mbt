@@ -51,13 +51,13 @@ test "incremental editor survives long transactions and keeps one undo step" {
   for i in 1..<2501 {
     assert_eq(
       editor_result(editor, { "op": "record", "value": i })["ok"],
-      true.to_json(),
+      @json.to_json(true),
     )
   }
   let committed = editor_result(editor, { "op": "commit" })
-  assert_eq(committed["state"], (2500).to_json())
-  assert_eq(committed["undo_depth"], (1).to_json())
-  assert_eq(editor_result(editor, { "op": "undo" })["state"], (0).to_json())
+  assert_eq(committed["state"], @json.to_json(2500))
+  assert_eq(committed["undo_depth"], @json.to_json(1))
+  assert_eq(editor_result(editor, { "op": "undo" })["state"], @json.to_json(0))
 }
 
 ///|
@@ -73,14 +73,14 @@ test "prepare save does not mutate live dirty flag or close an edit group" {
   let restored = @moonundo.JsonEditor::new(request.stringify()).unwrap()
   assert_eq(
     editor_result(restored, { "op": "status" })["dirty"],
-    false.to_json(),
+    @json.to_json(false),
   )
   let merged = editor_result(editor, {
     "op": "record",
     "value": 2,
     "group": "typing",
   })
-  assert_eq(merged["undo_depth"], (1).to_json())
+  assert_eq(merged["undo_depth"], @json.to_json(1))
 }
 
 ///|
@@ -96,12 +96,12 @@ test "bad incremental commands are atomic even during transactions" {
     ] {
     let output = @json.parse(editor.dispatch(command))
     guard output is Object(fields) else { fail("expected object") }
-    assert_eq(fields["ok"], false.to_json())
+    assert_eq(fields["ok"], @json.to_json(false))
     assert_eq(editor.status(), before)
   }
   assert_eq(
     editor_result(editor, { "op": "rollback" })["state"],
-    [1, 2].to_json(),
+    @json.to_json([1, 2]),
   )
 }
 
@@ -113,5 +113,8 @@ test "constructing editors rejects replay scripts and isolates instances" {
   let first = @moonundo.JsonEditor::new("{\"initial\":0}").unwrap()
   let second = @moonundo.JsonEditor::new("{\"initial\":0}").unwrap()
   ignore(editor_result(first, { "op": "record", "value": 7 }))
-  assert_eq(editor_result(second, { "op": "status" })["state"], (0).to_json())
+  assert_eq(
+    editor_result(second, { "op": "status" })["state"],
+    @json.to_json(0),
+  )
 }

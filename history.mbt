@@ -3,7 +3,7 @@ priv struct Revision[T] {
   value : T
   label : String
   group : String
-  id : Int
+  id : Int32
 }
 
 ///|
@@ -12,12 +12,12 @@ pub struct History[T] {
   priv copy : (T) -> T
   priv same : (T, T) -> Bool
   priv mut revisions : Array[Revision[T]]
-  priv mut cursor : Int
+  priv mut cursor : Int32
   priv mut live : T
   priv mut merge_allowed : Bool
-  priv mut saved_id : Int?
-  priv mut next_id : Int
-  priv mut limit : Int
+  priv mut saved_id : Int32?
+  priv mut next_id : Int32
+  priv mut limit : Int32
   priv transactions : Array[Transaction[T]]
 }
 
@@ -28,7 +28,7 @@ pub fn[T] History::new(
   initial : T,
   copy~ : (T) -> T,
   equal~ : (T, T) -> Bool,
-  limit? : Int = 100,
+  limit~ : Int32 = 100,
 ) -> Result[History[T], String] {
   if limit < 1 || limit > 10000 {
     return Err("history limit must be between 1 and 10000")
@@ -69,7 +69,7 @@ pub fn[T] History::record(
   self : History[T],
   next : T,
   label : String,
-  group? : String = "",
+  group~ : String = "",
 ) -> Result[Bool, String] {
   if (self.same)(self.live, next) {
     return Ok(false)
@@ -142,7 +142,7 @@ pub fn[T] History::redo(self : History[T]) -> Result[Bool, String] {
 }
 
 ///|
-pub fn[T] History::revision_id(self : History[T]) -> Int {
+pub fn[T] History::revision_id(self : History[T]) -> Int32 {
   self.revisions[self.cursor].id
 }
 

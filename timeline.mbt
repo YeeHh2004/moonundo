@@ -1,14 +1,15 @@
 ///|
 /// Metadata-only timeline entry; no mutable user data is exposed.
+#derive(@json.ToJson)
 pub struct RevisionInfo {
-  index : Int
-  revision_id : Int
+  index : Int32
+  revision_id : Int32
   label : String
   current : Bool
-} derive(ToJson)
+}
 
 ///|
-pub extend RevisionInfo with ToJson::{to_json}
+pub extend RevisionInfo with @json.ToJson::{to_json}
 
 ///|
 pub fn[T] History::timeline(self : History[T]) -> Array[RevisionInfo] {
@@ -18,17 +19,17 @@ pub fn[T] History::timeline(self : History[T]) -> Array[RevisionInfo] {
 }
 
 ///|
-pub fn[T] History::undo_depth(self : History[T]) -> Int {
+pub fn[T] History::undo_depth(self : History[T]) -> Int32 {
   self.cursor
 }
 
 ///|
-pub fn[T] History::redo_depth(self : History[T]) -> Int {
+pub fn[T] History::redo_depth(self : History[T]) -> Int32 {
   self.revisions.length() - self.cursor - 1
 }
 
 ///|
-pub fn[T] History::capacity(self : History[T]) -> Int {
+pub fn[T] History::capacity(self : History[T]) -> Int32 {
   self.limit
 }
 
@@ -45,7 +46,7 @@ pub fn[T] History::redo_label(self : History[T]) -> String? {
 /// Navigate by current timeline index, not by stable revision identifier.
 pub fn[T] History::jump_to(
   self : History[T],
-  index : Int,
+  index : Int32,
 ) -> Result[Bool, String] {
   if !self.transactions.is_empty() {
     return Err("cannot navigate during a transaction")
@@ -66,7 +67,7 @@ pub fn[T] History::jump_to(
 /// Reducing capacity keeps current state, closest past first, then future.
 pub fn[T] History::set_capacity(
   self : History[T],
-  limit : Int,
+  limit : Int32,
 ) -> Result[Unit, String] {
   if !self.transactions.is_empty() {
     return Err("cannot resize during a transaction")

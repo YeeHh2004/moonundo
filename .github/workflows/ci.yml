@@ -17,6 +17,8 @@ jobs:
             node: '22'
           - os: windows-latest
             node: '22'
+          - os: macos-15
+            node: '22'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,15 +26,21 @@ jobs:
           node-version: ${{ matrix.node }}
       - uses: hustcer/setup-moonbit@9199da0ab63ea0c0bab1dc15f03d76e17ed4f75f # v1.22
         with:
-          version: '0.10.14+7d59c7ec9'
-          core-version: '0.10.14+7d59c7ec9'
+          version: '0.10.20+65efd5b93'
+          core-version: '0.10.20+65efd5b93'
       - run: moon version --all
+      - run: node -p "process.platform + '/' + process.arch"
       - run: moon fmt --check
-      - run: moon check --target js
+      - run: moon check --target js --deny-warn
+      - run: moon check --target wasm-gc --deny-warn
       - run: moon info
       - run: git diff --exit-code -- '*.mbti'
-      - run: moon test --target js
-      - run: moon test --target wasm-gc
+      - run: moon build --target js --deny-warn
+      - run: moon build --target wasm-gc --deny-warn
+      - run: moon test --target js --deny-warn
+      - run: moon test --target wasm-gc --deny-warn
+      - run: moon run examples/typed --target js
+      - run: moon run examples/typed --target wasm-gc
       - run: node scripts/build.mjs
       - run: node --test tests/*.test.mjs
       - run: node scripts/check-consumer.mjs

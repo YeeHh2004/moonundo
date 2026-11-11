@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.3 — 2026-11-11
+
+- Fix [issue #1](https://github.com/YeeHh2004/moonundo/issues/1): current MoonBit no longer implicitly exposes primitive `to_json()` methods. Use explicit `@json.to_json` / `@json.ToJson` throughout the library, tests and examples; add the typed example's JSON import. Preserve history behavior, the public `RevisionInfo::to_json` method and v1 session format.
+- Migrate deprecated trailing `derive(...)` to `#derive(...)` and regenerate formatting/public interfaces with official compiler/core `0.10.20+65efd5b93`.
+- Pin that current verified baseline in the reproducible CI and registry workflows. Add macOS ARM64/Node 22 for the reported platform, architecture logs, strict checks/builds/tests and runnable examples on both declared backends. Add a separate weekly official-latest compatibility workflow without deployment or release steps.
+- Allow newer compilers through actual compilation instead of hard-rejecting their version. Build metadata records complete compiler/toolchain output, core version and license hashes; bundles copy full notices from the active installed core. Refresh the baseline core NOTICE.
+- Validate 60 MoonBit tests per backend, 63 per backend including the independent consumer, 31 Node tests, Chromium acceptance, source package contents and five realistic workloads. See [November maintenance evidence](docs/MAINTENANCE-2026-11.md) for the environment and reproducible commands; release/registry publication is verified separately.
+
 ## 0.2.2 — 2026-09-30
 
 - Publish `YeeHh2004/moonundo@0.2.2` to Mooncakes. The source distribution contains MoonBit implementation, tests and runnable examples with Apache-2.0 and complete upstream notices; browser/Node hosts stay in GitHub/Releases.

@@ -33,7 +33,9 @@ try {
   }
   run(['fmt','--check']);
   for(const target of ['js','wasm-gc']) {
-    run(['test','--target',target]);
+    run(['check','--target',target,'--deny-warn']);
+    run(['build','--target',target,'--deny-warn']);
+    run(['test','--target',target,'--deny-warn']);
     run(['run','.','--target',target]);
   }
   console.log(`${registry?'Registry-installed':'Workspace'} document consumer passed on JS and Wasm GC: nested transactions, deep copy, typed codecs, savepoint/redo restore, invalid schema and branching.`);

@@ -1,3 +1,3 @@
 # MoonUndo development
 
-Keep business logic in MoonBit. Use `///|` blocks. Use compiler/core 0.10.14+7d59c7ec9. After changes run `moon info`, `moon fmt`, and relevant tests. Do not create empty commits or split existing history to inflate submission counts. No sub-agent delegation is requested.
+Keep business logic in MoonBit. Use `///|` blocks. The current verified compiler/core baseline is 0.10.20+65efd5b93 (2026-11-11), pinned in CI for reproducibility; the separate weekly compatibility workflow uses official latest. Newer toolchains are allowed after real compilation and tests, not rejected by version string. For maintenance run `moon info`, `moon fmt`, and `node scripts/verify.mjs` (both declared backends, typed example, Node tests and independent consumer). Preserve actual compiler/core versions and active core notices in build provenance. Do not create empty commits or split existing history to inflate submission counts.

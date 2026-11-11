@@ -1,5 +1,5 @@
 ///|
-fn int_history(limit? : Int = 100) -> @moonundo.History[Int] {
+fn int_history(limit~ : Int32 = 100) -> @moonundo.History[Int32] {
   @moonundo.History::new(0, copy=fn(x) { x }, equal=fn(a, b) { a == b }, limit~).unwrap()
 }
 

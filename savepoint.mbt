@@ -7,7 +7,7 @@ pub fn[T] History::is_dirty(self : History[T]) -> Bool {
 }
 
 ///|
-pub fn[T] History::saved_revision_id(self : History[T]) -> Int? {
+pub fn[T] History::saved_revision_id(self : History[T]) -> Int32? {
   self.saved_id
 }
 
@@ -32,7 +32,7 @@ pub fn[T] History::forget_saved(self : History[T]) -> Unit {
 pub fn[T] History::reset(
   self : History[T],
   initial : T,
-  label? : String = "Loaded",
+  label~ : String = "Loaded",
 ) -> Result[Unit, String] {
   if !self.transactions.is_empty() {
     return Err("cannot reset during a transaction")

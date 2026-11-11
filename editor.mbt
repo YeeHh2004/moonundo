@@ -40,7 +40,7 @@ pub fn JsonEditor::dispatch(self : JsonEditor, text : String) -> String {
     if op == "prepare_save" || op == "export" {
       let session = require(self.history.export_session(fn(v) { v }))
       if op == "prepare_save" && session is Object(fields) {
-        fields["saved_id"] = self.history.revision_id().to_json()
+        fields["saved_id"] = @json.to_json(self.history.revision_id())
       }
       // Validate the final candidate, including the new savepoint's width.
       let request : Json = if self.include_session {

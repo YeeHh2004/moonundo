@@ -9,7 +9,7 @@ MoonUndo 是一个以 MoonBit 编写的独立 `History[T]` 库。应用保留自
 
 **[在线体验三个应用](https://yeehh2004.github.io/moonundo/)** · [验收步骤](docs/ACCEPTANCE.md) · [公开接口](pkg.generated.mbti)。在线演示只在 CI 全部通过后部署。
 
-**当前版本：v0.2.2。** [下载含预编译引擎的完整交付包](https://github.com/YeeHh2004/moonundo/releases/tag/v0.2.2)后，安装 Node.js 20+，直接执行 `node scripts/serve.mjs` 即可体验，无需先安装 MoonBit 或 npm 依赖。
+**当前源码版本：v0.2.3。** [11 月维护记录](docs/MAINTENANCE-2026-11.md) · [已发布的完整交付包](https://github.com/YeeHh2004/moonundo/releases/latest)。交付包包含预编译引擎，安装 Node.js 20+ 后直接执行 `node scripts/serve.mjs` 即可体验，无需先安装 MoonBit 或 npm 依赖。
 
 仓库内可直接审阅：[独立 MoonBit 接入项目](examples/consumer/) · [真实数据性能与原始记录](docs/PERFORMANCE.md) · [功能完成度与验证证据](docs/FINAL-ACCEPTANCE.md) · [版本开发记录](CHANGELOG.md)。全部核心功能、示例、测试和说明均随源码公开。
 
@@ -21,7 +21,7 @@ Generic, framework-independent snapshot history for MoonBit application state. O
 
 ## 五分钟体验
 
-需要 **Node.js 20+** 和 **MoonBit compiler/core `0.10.14+7d59c7ec9`**。CI 固定了同一版本，安装方法见 [工作流](.github/workflows/ci.yml)。网页、CLI 无第三方 JavaScript 运行时依赖。
+需要 **Node.js 20+** 和官方 MoonBit 工具链。2026-11-11 的验证基线为 **compiler/core `0.10.20+65efd5b93`**；[主 CI](.github/workflows/ci.yml) 固定该版本，[每周兼容检查](.github/workflows/compatibility.yml) 使用官方 latest。构建脚本允许新版通过真实编译，并记录实际 compiler/core 与完整版本输出。网页、CLI 无第三方 JavaScript 运行时依赖。
 
 ```sh
 git clone https://github.com/YeeHh2004/moonundo.git
@@ -45,7 +45,7 @@ node scripts/serve.mjs
 核心包已发布至 [Mooncakes](https://mooncakes.io/docs/YeeHh2004/moonundo)。在已有 MoonBit 项目中运行：
 
 ```sh
-moon add YeeHh2004/moonundo@0.2.2
+moon add YeeHh2004/moonundo@0.2.3
 ```
 
 然后在使用该库的 `moon.pkg` 中声明 `import { "YeeHh2004/moonundo" @undo }`。可运行最小例子见 [包使用说明](docs/MOONCAKES.md)。`node scripts/check-consumer.mjs --registry` 会在无 workspace 的新项目中从公开注册表安装、核对核心源码，并在 JS/Wasm GC 上运行完整接入测试。
@@ -57,7 +57,7 @@ workspace/
   moon.work       // members = ["moonundo", "my-app"]
   moonundo/       // 本仓库
   my-app/
-    moon.mod      // import { "YeeHh2004/moonundo@0.2.2" }
+    moon.mod      // import { "YeeHh2004/moonundo@0.2.3" }
     moon.pkg      // import { "YeeHh2004/moonundo" @undo }
 ```
 
@@ -112,9 +112,12 @@ node cli/moonundo.mjs --help
 
 ```sh
 moon fmt --check
-moon check --target js
-moon test --target js
-moon test --target wasm-gc
+moon check --target js --deny-warn
+moon check --target wasm-gc --deny-warn
+moon build --target js --deny-warn
+moon build --target wasm-gc --deny-warn
+moon test --target js --deny-warn
+moon test --target wasm-gc --deny-warn
 node scripts/build.mjs
 node --test tests/*.test.mjs
 node scripts/check-consumer.mjs
@@ -128,9 +131,9 @@ npx playwright install chromium
 node tests/browser.mjs
 ```
 
-可设置 `BROWSER_CHANNEL=msedge` 使用已安装的 Edge。浏览器验收覆盖三个场景、保存/恢复、导入/导出、拖动合并、2,200 次事务内编辑后取消、存储配额失败、延迟导入期间的新编辑保护及移动端布局。截图写入 `dist/browser-screenshots/`，不修改源码。CI 覆盖 Linux Node 20/22、Windows Node 22；Linux Node 22 另运行 Chromium 验收，并构建带哈希清单的发布 ZIP。
+可设置 `BROWSER_CHANNEL=msedge` 使用已安装的 Edge。浏览器验收覆盖三个场景、保存/恢复、导入/导出、拖动合并、2,200 次事务内编辑后取消、存储配额失败、延迟导入期间的新编辑保护及移动端布局。截图写入 `dist/browser-screenshots/`，不修改源码。CI 覆盖 Linux Node 20/22、Windows Node 22 和 macOS ARM64 Node 22；Linux Node 22 另运行 Chromium 验收，并构建带哈希清单的发布 ZIP。
 
-源码修改须使用固定 compiler/core `0.10.14+7d59c7ec9`。构建、维护、打包命令见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)。`node scripts/benchmark-workloads.mjs` 验证 100/500 条任务及嵌套文档在不同容量下的编辑、导出和恢复，CI 同时上传测量结果；[性能说明](docs/PERFORMANCE.md) 提供原始记录及适用边界，不设跨机器性能承诺。
+源码维护使用当前官方 compiler/core；复现本次验证可安装上述固定基线。针对 [issue #1](https://github.com/YeeHh2004/moonundo/issues/1) 报告的新工具链 JSON 转换失败，主库、测试和接入示例改用显式 `@json.to_json` / `@json.ToJson`。构建、维护、打包命令见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)。`node scripts/benchmark-workloads.mjs` 验证 100/500 条任务及嵌套文档在不同容量下的编辑、导出和恢复，CI 同时上传测量结果；[性能说明](docs/PERFORMANCE.md) 保留原始环境记录及适用边界，不设跨机器性能承诺。
 
 ## 适用边界与来源
 

@@ -1,8 +1,8 @@
 ///|
-let editors : Map[Int, @undo.JsonEditor] = Map([])
+let editors : Map[Int32, @undo.JsonEditor] = Map([])
 
 ///|
-let next_handle : Ref[Int] = Ref(1)
+let next_handle : Ref[Int32] = Ref(1)
 
 ///|
 /// At most 64 live handles. Close replaced editors; identifiers are never reused.
@@ -27,7 +27,7 @@ pub fn open_editor(text : String) -> String {
 }
 
 ///|
-pub fn dispatch_editor(handle : Int, text : String) -> String {
+pub fn dispatch_editor(handle : Int32, text : String) -> String {
   match editors.get(handle) {
     Some(editor) => editor.dispatch(text)
     None => {
@@ -38,7 +38,7 @@ pub fn dispatch_editor(handle : Int, text : String) -> String {
 }
 
 ///|
-pub fn close_editor(handle : Int) -> Bool {
+pub fn close_editor(handle : Int32) -> Bool {
   let present = editors.contains(handle)
   editors.remove(handle)
   present

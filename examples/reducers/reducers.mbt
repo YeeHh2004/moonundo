@@ -4,38 +4,43 @@ priv suberror InputError {
 }
 
 ///|
+#derive(@json.ToJson, @json.FromJson)
 priv struct Settings {
   name : String
   theme : String
   notifications : Bool
-} derive(ToJson, @json.FromJson)
+}
 
 ///|
+#derive(@json.ToJson, @json.FromJson)
 priv struct Task {
-  id : Int
+  id : Int32
   title : String
   done : Bool
-} derive(ToJson, @json.FromJson)
+}
 
 ///|
+#derive(@json.ToJson, @json.FromJson)
 priv struct Tasks {
   items : Array[Task]
-  next_id : Int
-} derive(ToJson, @json.FromJson)
+  next_id : Int32
+}
 
 ///|
+#derive(@json.ToJson, @json.FromJson)
 priv struct Shape {
-  id : Int
-  x : Int
-  y : Int
+  id : Int32
+  x : Int32
+  y : Int32
   color : String
-} derive(ToJson, @json.FromJson)
+}
 
 ///|
+#derive(@json.ToJson, @json.FromJson)
 priv struct Canvas {
   shapes : Array[Shape]
-  next_id : Int
-} derive(ToJson, @json.FromJson)
+  next_id : Int32
+}
 
 ///|
 fn get(value : Json, key : String) -> Json raise InputError {
@@ -46,7 +51,7 @@ fn get(value : Json, key : String) -> Json raise InputError {
 }
 
 ///|
-fn integer(value : Json) -> Int raise InputError {
+fn integer(value : Json) -> Int32 raise InputError {
   guard value is Number(n, ..) && n >= 0.0 && n <= 1000000.0 else {
     raise InputError("expected nonnegative integer up to 1000000")
   }
@@ -84,7 +89,7 @@ fn settings(state : Json, action : Json, name : String) -> Json raise {
       { ..current, notifications: @json.from_json(get(action, "value")), }
     _ => raise InputError("unknown settings action")
   }
-  ToJson::to_json(next)
+  @json.to_json(next)
 }
 
 ///|
@@ -102,7 +107,7 @@ fn tasks(state : Json, action : Json, name : String) -> Json raise {
     current.next_id > 1000000 {
     raise InputError("invalid task list")
   }
-  let ids : Map[Int, Bool] = Map([])
+  let ids : Map[Int32, Bool] = Map([])
   for task in current.items {
     if task.id < 0 ||
       task.id >= current.next_id ||
@@ -152,7 +157,7 @@ fn tasks(state : Json, action : Json, name : String) -> Json raise {
       { ..current, items: current.items.filter(fn(t) { !t.done }), }
     _ => raise InputError("unknown task action")
   }
-  ToJson::to_json(next)
+  @json.to_json(next)
 }
 
 ///|
@@ -172,7 +177,7 @@ fn canvas(state : Json, action : Json, name : String) -> Json raise {
     current.next_id > 1000000 {
     raise InputError("invalid canvas")
   }
-  let ids : Map[Int, Bool] = Map([])
+  let ids : Map[Int32, Bool] = Map([])
   for shape in current.shapes {
     if shape.id < 0 ||
       shape.id >= current.next_id ||
@@ -235,7 +240,7 @@ fn canvas(state : Json, action : Json, name : String) -> Json raise {
     }
     _ => raise InputError("unknown canvas action")
   }
-  ToJson::to_json(next)
+  @json.to_json(next)
 }
 
 ///|

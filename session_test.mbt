@@ -1,5 +1,5 @@
 ///|
-fn decode_int(j : Json) -> Result[Int, String] {
+fn decode_int(j : Json) -> Result[Int32, String] {
   Ok(@json.from_json(j)) catch {
     _ => Err("expected integer")
   }
@@ -64,20 +64,20 @@ test "export codec receives isolated arrays and restore clones decoded arrays" {
   let h = @moonundo.History::new([1], copy=fn(x) { x.copy() }, equal=fn(a, b) {
     a == b
   }).unwrap()
-  let retained : Array[Array[Int]] = []
+  let retained : Array[Array[Int32]] = []
   let session = h
     .export_session(fn(x) {
       retained.push(x)
-      x.to_json()
+      @json.to_json(x)
     })
     .unwrap()
   retained[0].push(99)
   assert_eq(h.state(), [1])
-  let decoded : Array[Array[Int]] = []
+  let decoded : Array[Array[Int32]] = []
   let restored = @moonundo.restore_session(
     session,
     fn(json) {
-      let value : Array[Int] = @json.from_json(json) catch {
+      let value : Array[Int32] = @json.from_json(json) catch {
         _ => return Err("expected integers")
       }
       decoded.push(value)
@@ -95,8 +95,8 @@ test "export codec receives isolated arrays and restore clones decoded arrays" {
 test "codec failures leave the source history usable" {
   let h = int_history()
   ignore(h.record(1, "one"))
-  let session = h.export_session(fn(x) { x.to_json() }).unwrap()
-  let failed : Result[@moonundo.History[Int], String] = @moonundo.restore_session(
+  let session = h.export_session(fn(x) { @json.to_json(x) }).unwrap()
+  let failed : Result[@moonundo.History[Int32], String] = @moonundo.restore_session(
     session,
     fn(_) { Err("schema mismatch") },
     copy=fn(x) { x },
@@ -109,9 +109,9 @@ test "codec failures leave the source history usable" {
 }
 
 ///|
-fn roundtrip(h : @moonundo.History[Int]) -> @moonundo.History[Int] {
+fn roundtrip(h : @moonundo.History[Int32]) -> @moonundo.History[Int32] {
   @moonundo.restore_session(
-    h.export_session(fn(x) { x.to_json() }).unwrap(),
+    h.export_session(fn(x) { @json.to_json(x) }).unwrap(),
     decode_int,
     copy=fn(x) { x },
     equal=fn(a, b) { a == b },
@@ -150,7 +150,7 @@ test "pruned saved revision and forgotten savepoint survive session" {
 test "export rejects preview and restore breaks grouping" {
   let h = int_history()
   ignore(h.begin("preview"))
-  assert_true(h.export_session(fn(x) { x.to_json() }) is Err(_))
+  assert_true(h.export_session(fn(x) { @json.to_json(x) }) is Err(_))
   ignore(h.rollback())
   ignore(h.record(1, "a", group="typing"))
   let restored = roundtrip(h)

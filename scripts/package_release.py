@@ -41,14 +41,19 @@ Requires Node.js 20+, no npm install for the included demo/CLI:
   node cli/moonundo.mjs examples/task-session.json
   node --test tests/*.test.mjs
 
-The compiled MoonBit engine is included. To rebuild, install compiler/core
-{info['toolchain']} and run node scripts/build.mjs.
+The compiled MoonBit engine is included. The build used:
+  compiler: {info['compilerVersion']}
+  core: {info['coreVersion']}
+To reproduce it, install those versions and run node scripts/build.mjs.
+Newer official toolchains may be checked with node scripts/verify.mjs.
 Read README.md, docs/ACCEPTANCE.md, docs/DEVELOPMENT.md and docs/JSON.md.
 LICENSE covers original code; licenses/ preserves full upstream notices.
 MANIFEST.json identifies source and hashes every other file in this archive.
 No .git, credentials, personal submissions, dependencies or local caches included.
 '''.encode()
 manifest = {'version':version, 'sourceCommit':head, 'toolchain':info['toolchain'],
+            'compilerVersion':info['compilerVersion'], 'coreVersion':info['coreVersion'],
+            'coreNoticeSha256':info['coreNoticeSha256'], 'coreLicenseSha256':info['coreLicenseSha256'],
             'sha256':{name:digest(data) for name,data in sorted(files.items())}}
 files['MANIFEST.json'] = (json.dumps(manifest,ensure_ascii=False,indent=2)+'\n').encode()
 args.output.mkdir(parents=True,exist_ok=True)

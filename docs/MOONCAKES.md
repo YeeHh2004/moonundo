@@ -4,12 +4,12 @@ Generic snapshot undo/redo and transactional history, implemented in MoonBit. Ap
 
 ## Install
 
-Requires MoonBit compiler/core 0.10.14 or newer. This release is tested with `moonc v0.10.14+7d59c7ec9` on JavaScript and Wasm GC.
+Use the current official MoonBit compiler/core. The 2026-11-11 validation baseline is `0.10.20+65efd5b93` on JavaScript and Wasm GC. CI pins that complete version for reproducibility and separately checks official latest weekly. JSON conversion uses the explicit `@json.to_json` and `@json.ToJson` APIs.
 
 From an existing MoonBit project:
 
 ```sh
-moon add YeeHh2004/moonundo@0.2.2
+moon add YeeHh2004/moonundo@0.2.3
 ```
 
 Add this package import to `moon.pkg`:

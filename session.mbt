@@ -1,19 +1,21 @@
 ///|
+#derive(@json.ToJson, @json.FromJson)
 priv struct StoredRevision {
-  id : Int
+  id : Int32
   label : String
   value : Json
-} derive(ToJson, @json.FromJson)
+}
 
 ///|
+#derive(@json.ToJson, @json.FromJson)
 priv struct Session {
-  version : Int
-  limit : Int
-  cursor : Int
-  next_id : Int
-  saved_id : Int?
+  version : Int32
+  limit : Int32
+  cursor : Int32
+  next_id : Int32
+  saved_id : Int32?
   revisions : Array[StoredRevision]
-} derive(ToJson, @json.FromJson)
+}
 
 ///|
 /// The codec owns the schema of T. Active previews cannot be persisted.
@@ -34,7 +36,7 @@ pub fn[T] History::export_session(
       { id: r.id, label: r.label, value: encode((self.copy)(r.value)), }
     }),
   }
-  Ok(ToJson::to_json(session))
+  Ok(@json.to_json(session))
 }
 
 ///|
@@ -80,7 +82,7 @@ pub fn[T] restore_session(
 }
 
 ///|
-fn exact_int(value : Json) -> Result[Int, String] {
+fn exact_int(value : Json) -> Result[Int32, String] {
   guard value is Number(n, ..) else { return Err("expected integer") }
   if n.is_nan() || n < -2147483648.0 || n > 2147483647.0 {
     return Err("integer out of range")

@@ -1,6 +1,6 @@
 name = "YeeHh2004/moonundo"
 
-version = "0.2.2"
+version = "0.2.3"
 
 readme = "docs/MOONCAKES.md"
 

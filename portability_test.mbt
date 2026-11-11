@@ -1,5 +1,5 @@
 ///|
-fn exhausted_history() -> @moonundo.History[Int] {
+fn exhausted_history() -> @moonundo.History[Int32] {
   let session : Json = {
     "version": 1,
     "limit": 2,
@@ -40,7 +40,7 @@ test "revision exhaustion rejects record reset and outer commit without corrupti
 test "replay resource limits and invalid command shapes reject on both backends" {
   let commands : Array[Json] = Array::make(2001, { "op": "undo" })
   let oversized : Json = { "initial": 0, "commands": commands }
-  let mut deep : Json = (0).to_json()
+  let mut deep : Json = @json.to_json(0)
   for _ in 0..<70 {
     deep = Json::array([deep])
   }
@@ -57,7 +57,7 @@ test "replay resource limits and invalid command shapes reject on both backends"
   for input in inputs {
     let response = @json.parse(@moonundo.replay(input))
     guard response is Object(fields) else { fail("expected rejection object") }
-    assert_eq(fields["ok"], false.to_json())
+    assert_eq(fields["ok"], @json.to_json(false))
     assert_true(fields.contains("error"))
     assert_true(!fields.contains("session"))
   }
@@ -70,21 +70,21 @@ test "less common JSON commands preserve savepoints and grouping boundaries" {
   ignore(editor_result(editor, { "op": "break_group" }))
   assert_eq(
     editor_result(editor, { "op": "record", "value": 2, "group": "x" })["undo_depth"],
-    (2).to_json(),
+    @json.to_json(2),
   )
   ignore(editor_result(editor, { "op": "save" }))
   assert_eq(
     editor_result(editor, { "op": "forget_saved" })["dirty"],
-    true.to_json(),
+    @json.to_json(true),
   )
   assert_eq(
     editor_result(editor, { "op": "clear" })["undo_depth"],
-    (0).to_json(),
+    @json.to_json(0),
   )
   let reset = editor_result(editor, { "op": "reset", "value": 9 })
-  assert_eq(reset["state"], (9).to_json())
-  assert_eq(reset["dirty"], false.to_json())
-  assert_eq(reset["undo_depth"], (0).to_json())
+  assert_eq(reset["state"], @json.to_json(9))
+  assert_eq(reset["dirty"], @json.to_json(false))
+  assert_eq(reset["undo_depth"], @json.to_json(0))
 }
 
 ///|
@@ -100,7 +100,9 @@ test "malformed session metadata never invokes application decoders" {
     ("revisions", [{ "id": 0.5, "label": "bad", "value": 0 }]),
   ]
   for (key, value) in mutations {
-    let valid = int_history().export_session(fn(x) { x.to_json() }).unwrap()
+    let valid = int_history()
+      .export_session(fn(x) { @json.to_json(x) })
+      .unwrap()
     guard valid is Object(fields) else { fail("expected session") }
     fields[key] = value
     let calls = Ref(0)

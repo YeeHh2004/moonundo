@@ -6,8 +6,8 @@ test "JSON adapter performs a transaction and emits restorable session" {
     ),
   )
   guard response is Object(fields) else { fail("expected object") }
-  assert_eq(fields["ok"], true.to_json())
-  assert_eq(fields["redo_depth"], (1).to_json())
+  assert_eq(fields["ok"], @json.to_json(true))
+  assert_eq(fields["redo_depth"], @json.to_json(1))
   assert_eq(fields["state"], { "x": 0 })
   let restored : Json = {
     "session": fields["session"],
@@ -27,7 +27,7 @@ test "JSON adapter reports invalid requests and disallowed preview navigation" {
     ] {
     let response = @json.parse(@moonundo.replay(input))
     guard response is Object(fields) else { fail("expected object") }
-    assert_eq(fields["ok"], false.to_json())
+    assert_eq(fields["ok"], @json.to_json(false))
     assert_true(fields.contains("error"))
   }
 }

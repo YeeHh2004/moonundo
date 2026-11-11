@@ -1,8 +1,9 @@
 ///|
+#derive(Eq, @json.ToJson)
 priv struct Document {
   title : String
   tags : Array[String]
-} derive(Eq, ToJson)
+}
 
 ///|
 fn clone_document(doc : Document) -> Document {
@@ -26,7 +27,7 @@ fn main {
   ignore(history.record({ title: "My article", tags: [], }, "Rename"))
   ignore(history.record({ title: "My article", tags: ["moonbit"], }, "Tag"))
   ignore(history.commit())
-  println(ToJson::to_json(history.state()).stringify())
+  println(@json.to_json(history.state()).stringify())
   ignore(history.undo())
-  println(ToJson::to_json(history.state()).stringify())
+  println(@json.to_json(history.state()).stringify())
 }

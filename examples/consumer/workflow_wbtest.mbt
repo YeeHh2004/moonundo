@@ -15,7 +15,9 @@ test "nested document edits round-trip savepoint redo and deeply isolated arrays
   let saved_id = h.revision_id()
   ignore(h.record(document("Revision", ["New line"]), "Revise").unwrap())
   ignore(h.undo().unwrap())
-  let restored = reopen(h.export_session(fn(doc) { doc.to_json() }).unwrap()).unwrap()
+  let restored = reopen(
+    h.export_session(fn(doc) { @json.to_json(doc) }).unwrap(),
+  ).unwrap()
   assert_true(!restored.is_dirty())
   assert_eq(restored.saved_revision_id(), Some(saved_id))
   assert_eq(restored.redo_label(), Some("Revise"))
@@ -38,7 +40,7 @@ test "codec rejects obsolete or invalid historical documents before replacement"
       if doc.title == "Untitled" {
         { "schema": 2, "title": "Old schema", "sections": [] }
       } else {
-        doc.to_json()
+        @json.to_json(doc)
       }
     })
     .unwrap()
@@ -68,7 +70,9 @@ test "editing after restored undo branches with fresh identity and preserves pru
   ignore(h.record(document("Second", ["B"]), "Second").unwrap())
   let discarded_id = h.revision_id()
   ignore(h.undo().unwrap())
-  let restored = reopen(h.export_session(fn(doc) { doc.to_json() }).unwrap()).unwrap()
+  let restored = reopen(
+    h.export_session(fn(doc) { @json.to_json(doc) }).unwrap(),
+  ).unwrap()
   ignore(restored.record(document("New branch", ["C"]), "Branch").unwrap())
   assert_true(!restored.can_redo())
   assert_true(restored.revision_id() > discarded_id)
@@ -77,7 +81,7 @@ test "editing after restored undo branches with fresh identity and preserves pru
   assert_eq(restored.saved_revision_id(), Some(saved_id))
   assert_true(restored.is_dirty())
   let pruned = reopen(
-    restored.export_session(fn(doc) { doc.to_json() }).unwrap(),
+    restored.export_session(fn(doc) { @json.to_json(doc) }).unwrap(),
   ).unwrap()
   assert_eq(pruned.undo_depth(), 1)
   assert_true(pruned.undo().unwrap())

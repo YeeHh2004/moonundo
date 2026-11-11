@@ -1,0 +1,39 @@
+name: Current MoonBit compatibility
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 2 * * 1'
+permissions:
+  contents: read
+jobs:
+  current:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: hustcer/setup-moonbit@9199da0ab63ea0c0bab1dc15f03d76e17ed4f75f # v1.22
+        with:
+          version: latest
+          core-version: latest
+      - run: moon version --all
+      - run: node -p "process.platform + '/' + process.arch"
+      - name: Check, build, test and run typed example on both backends
+        run: |
+          for target in js wasm-gc; do
+            moon check --target "$target" --deny-warn
+            moon build --target "$target" --deny-warn
+            moon test --target "$target" --deny-warn
+            moon run examples/typed --target "$target"
+          done
+      - run: node scripts/build.mjs
+      - run: node --test tests/*.test.mjs
+      - run: node scripts/check-consumer.mjs
+      - name: Preserve actual compiler provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-toolchain-build-info
+          path: web/build-info.json

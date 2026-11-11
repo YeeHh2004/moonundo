@@ -1,18 +1,17 @@
 ///|
+#derive(Eq, @json.ToJson, @json.FromJson)
 priv struct Section {
   heading : String
   lines : Array[String]
-} derive(Eq, ToJson, @json.FromJson)
+}
 
 ///|
+#derive(Eq, @json.ToJson, @json.FromJson)
 priv struct Document {
-  schema : Int
+  schema : Int32
   title : String
   sections : Array[Section]
-} derive(Eq, ToJson, @json.FromJson)
-
-///|
-extend Document with ToJson::{to_json}
+}
 
 ///|
 fn copy_document(doc : Document) -> Document {
@@ -28,7 +27,8 @@ fn copy_document(doc : Document) -> Document {
 ///|
 // The application's codec validates its schema on every historical snapshot.
 fn decode_document(value : Json) -> Result[Document, String] {
-  guard value is Object(fields) && fields.get("schema") == Some((1).to_json()) else {
+  guard value is Object(fields) &&
+    fields.get("schema") == Some(@json.to_json(1)) else {
     return Err("unsupported document schema; expected 1")
   }
   let doc : Document = @json.from_json(value) catch {
@@ -91,11 +91,11 @@ fn main {
     .unwrap(),
   )
   ignore(h.undo().unwrap())
-  let saved = h.export_session(fn(doc) { doc.to_json() }).unwrap()
+  let saved = h.export_session(fn(doc) { @json.to_json(doc) }).unwrap()
   let restored = reopen(saved).unwrap()
   println("Reopened saved revision (clean):")
-  println(restored.state().to_json().stringify())
+  println(@json.to_json(restored.state()).stringify())
   ignore(restored.redo().unwrap())
   println("Redo after reopening (unsaved revision):")
-  println(restored.state().to_json().stringify())
+  println(@json.to_json(restored.state()).stringify())
 }

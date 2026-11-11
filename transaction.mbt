@@ -5,7 +5,7 @@ priv struct Transaction[T] {
 }
 
 ///|
-pub fn[T] History::transaction_depth(self : History[T]) -> Int {
+pub fn[T] History::transaction_depth(self : History[T]) -> Int32 {
   self.transactions.length()
 }
 

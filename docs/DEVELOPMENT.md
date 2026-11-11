@@ -2,7 +2,9 @@
 
 ## 环境与启动
 
-运行预编译交付包只需 Node.js 20+。源码编译固定 MoonBit compiler/core `0.10.14+7d59c7ec9`；用 `moon version --all` 确认，构建脚本会拒绝其他 compiler 版本。安装工具参考 [MoonBit 官方工具链文档](https://docs.moonbitlang.com/en/latest/toolchain/index.html)，自动安装该固定版本的已验证配置见 [.github/workflows/ci.yml](../.github/workflows/ci.yml)。不需要下载 UI 框架或 npm 运行时依赖。
+运行预编译交付包只需 Node.js 20+。源码维护使用官方当前 MoonBit compiler/core；2026-11-11 的验证基线为 `0.10.20+65efd5b93`。用 `moon version --all` 和 `moonc -v` 确认，安装方法参考 [MoonBit 官方工具链文档](https://docs.moonbitlang.com/en/latest/toolchain/index.html)。[主 CI](../.github/workflows/ci.yml) 固定完整版本，以便复现；[每周兼容流程](../.github/workflows/compatibility.yml) 使用 latest/compiler 和 latest/core，在两个声明后端检查、构建、测试，并验证 Node 宿主和独立接入示例。该独立流程不部署演示或发布产物。
+
+构建脚本不按版本字符串拒绝新版工具链，而是实际编译并拒绝警告。`web/build-info.json` 保存完整 `compilerVersion`、`moonVersion`、`coreVersion`、源码提交和引擎哈希。构建从活动 `MOON_HOME/lib/core`（未设置时为 `~/.moon/lib/core`）读取实际 core manifest、LICENSE 和 NOTICE，保留完整许可并记录哈希；自定义安装应设置正确的 `MOON_HOME`。源码中的 `licenses/` 是本次基线的上游许可副本。无需下载 UI 框架或 npm 运行时依赖。
 
 ```sh
 node scripts/build.mjs
@@ -13,9 +15,9 @@ node scripts/serve.mjs
 
 ## 接入自己的 MoonBit 数据类型
 
-已发布 [Mooncakes 0.2.2](https://mooncakes.io/docs/YeeHh2004/moonundo)。普通接入运行 `moon add YeeHh2004/moonundo@0.2.2`，并在包中声明 `import { "YeeHh2004/moonundo" @undo }`。运行 `node scripts/check-consumer.mjs --registry` 可在无 workspace 的临时项目中复现公开安装、核心源码核对、构建与两个后端的测试/运行。
+核心包通过 [Mooncakes](https://mooncakes.io/docs/YeeHh2004/moonundo) 分发。当前源码声明版本为 `0.2.3`；该版本发布后，普通接入运行 `moon add YeeHh2004/moonundo@0.2.3`，并在包中声明 `import { "YeeHh2004/moonundo" @undo }`。`node scripts/check-consumer.mjs --registry` 要求该版本已在注册表公开，可在无 workspace 的临时项目中复现公开安装、核心源码核对、构建与两个后端的测试/运行。
 
-同时开发库与应用时，也可以把二者放进同一 `moon.work`，模块声明 `import { "YeeHh2004/moonundo@0.2.2" }`；`node scripts/check-consumer.mjs` 使用这一源码 workspace 模式。前者验证正式分发，后者验证当前工作区，两者用途不同。
+同时开发库与应用时，也可以把二者放进同一 `moon.work`，模块声明 `import { "YeeHh2004/moonundo@0.2.3" }`；`node scripts/check-consumer.mjs` 使用这一源码 workspace 模式。前者验证正式分发，后者验证当前工作区，两者用途不同。
 
 `History[T]` 接受状态初值、纯深复制函数和纯比较函数。`examples/typed/main.mbt` 展示自定义 `Document` 结构体中可变数组的隔离：调用方修改输入或查询返回值，不改变内部历史。嵌套对象需要逐层复制；不可变数据可以用恒等复制。[examples/consumer](../examples/consumer/) 是可复制的独立模块，包含更完整的嵌套文档、应用 codec 和三个工作流测试；接入检查会在临时 workspace 中验证，并在结束后清理。
 
@@ -75,12 +77,12 @@ Mooncakes 使用 `.moonignore` 单独定义源码分发范围。运行 `python s
 
 GitHub Release 发布后，[registry.yml](../.github/workflows/registry.yml) 自动在 Linux 和 Windows 验证公开包。该流程没有发布密钥，只执行公开下载、核心源码比对、构建和运行。
 
-打包工具仅依赖 Python 3 标准库、Node、Git 和固定 MoonBit 工具链：
+打包工具仅依赖 Python 3 标准库、Node、Git 和 MoonBit 工具链；复现同一编译产物时使用 CI 固定基线：
 
 ```sh
 python scripts/package_release.py
 ```
 
-它要求工作区干净，重新编译，以 Git 提交对象收集源码，加入预编译引擎、网页许可、启动说明、构建信息及逐文件 SHA-256 清单，然后校验 ZIP 内容。输出 `dist/MoonUndo-v0.2.2.zip`；可用 `--output <目录>` 改路径。固定 ZIP 文件排序、权限和提交时间戳；同一源码与编译产物可得到一致压缩包。压缩包不包含 `.git`、依赖缓存或凭据，完整提交历史保留在 GitHub。
+它要求工作区干净，重新编译，以 Git 提交对象收集源码，加入预编译引擎、网页许可、启动说明、构建信息及逐文件 SHA-256 清单，然后校验 ZIP 内容。输出 `dist/MoonUndo-v0.2.3.zip`；可用 `--output <目录>` 改路径。固定 ZIP 文件排序、权限和提交时间戳；同一提交、构建元数据与编译产物可得到一致压缩包，完整工具链输出中的安装路径也属于元数据。压缩包不包含 `.git`、依赖缓存或凭据，完整提交历史保留在 GitHub。
 
 先确认目标提交 CI 全绿，再发布同一提交的 tag、Release 和 ZIP。在线演示只部署 CI 成功且仍为 main 最新提交的产物，公开 `build-info.json` 可核对版本和 sourceCommit。保留完整 [NOTICE](../NOTICE.md) 与 [licenses](../licenses)，不要在分发预编译引擎时仅保留项目自己的许可证。
